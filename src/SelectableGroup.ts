@@ -1,3 +1,5 @@
+import { Signal } from '@rbxts/beacon';
+
 type Button = TextButton | ImageButton;
 
 /** The SelectableGroupConfig is a configurable set of options that changes the default behavior. */
@@ -25,6 +27,16 @@ class SelectableGroup {
     CurrentSelection: Button[] = [];
     /** The default selected button that is assigned so that when DeselectAll() is called this button will remain selected if Config.requiredSelection */
     DefaultSelection?: Button;
+
+    /**
+     * A Beacon Signal that when fired will give the previous selection and the new current selection.
+     * 
+     * Note:
+     * The previous selection can be undefined in cases where there was no selection.
+     * The current selection can be undefined in cases where requireSelection is false and nothing is selected.
+     * @event
+     */
+    SelectionChanged: Signal<[prev: Button | undefined,current: Button | undefined]> = new Signal();
 	
 	// Configurable Options
 
@@ -53,7 +65,7 @@ class SelectableGroup {
 
     /** Initializes the SelectionGroup. \*Remember to call this for intended behavior* */
     Init() {
-        
+
         for (const btn of this.SelectionGroup) {
 
             btn.BorderColor3 = this.Config.borderColor;
@@ -76,16 +88,20 @@ class SelectableGroup {
                         if (this.CurrentSelection[0] === btn) {
                             if (this.Config.requireSelection) return;
 
+                            const prevSelection: Button = this.CurrentSelection[0];
                             // Unselect the current button
-                            this.CurrentSelection[0].BorderSizePixel = 0;
+                            prevSelection.BorderSizePixel = 0;
                             this.CurrentSelection.remove(0);
+                            this.SelectionChanged.Fire(prevSelection,undefined);
                         } else {
+                            const prevSelection: Button = this.CurrentSelection[0];
                             // Unselect the current button and select this button
-                            this.CurrentSelection[0].BorderSizePixel = 0;
+                            prevSelection.BorderSizePixel = 0;
                             this.CurrentSelection.remove(0);
 
                             this.CurrentSelection.push(btn);
                             btn.BorderSizePixel = borderSize;
+                            this.SelectionChanged.Fire(prevSelection,btn);
                         }
                     } else {
                         // Check if this btn is already selected
@@ -94,11 +110,14 @@ class SelectableGroup {
                             // If this is the last button selected and a selection is required return
                             if (this.CurrentSelection.size() === 1 && this.Config.requireSelection) return;
 
-                            this.CurrentSelection[0].BorderSizePixel = 0;
+                            const prevSelection: Button = this.CurrentSelection[0];
+                            prevSelection.BorderSizePixel = 0;
                             this.CurrentSelection.remove(btnIndex);
+                            this.SelectionChanged.Fire(prevSelection,undefined);
                         } else {
                             this.CurrentSelection.push(btn);
                             btn.BorderSizePixel = borderSize;
+                            this.SelectionChanged.Fire(undefined,btn);
                         }
                     }
                 })
