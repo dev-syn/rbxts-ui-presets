@@ -11,9 +11,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "types": "out/index.d.ts",
+  "types": "src/index.d.ts",
   "files": [
-    "out",
+    "src",
     "!**/*.tsbuildinfo"
   ],
   "publishConfig": {
