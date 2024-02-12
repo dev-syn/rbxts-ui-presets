@@ -42,7 +42,10 @@ class SelectableGroup {
      */
     private selectableConnections: RBXScriptConnection[] = [];
 
-    /** Constructs a SelectableGroup object. */
+    /**
+     * Constructs a SelectableGroup object.
+     * @param group - An optional parameter to assign this SelectableGroup buttons
+     */
 	constructor(group?: Button[]) {
         if (!group) this.SelectionGroup = [];
         else this.SelectionGroup = group;
