@@ -53,6 +53,7 @@ class SelectableGroup {
 
     /** Initializes the SelectionGroup. \*Remember to call this for intended behavior* */
     Init() {
+        
         for (const btn of this.SelectionGroup) {
 
             btn.BorderColor3 = this.Config.borderColor;
@@ -102,6 +103,12 @@ class SelectableGroup {
                     }
                 })
             );
+        }
+
+        if (this.DefaultSelection) {
+            // Make the default button selected
+            this.CurrentSelection.push(this.DefaultSelection);
+            this.DefaultSelection.BorderSizePixel = 2;
         }
     }
 
