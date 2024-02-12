@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "types": "src/index.d.ts",
+  "types": "out/index.d.ts",
   "files": [
     "out",
     "!**/*.tsbuildinfo"
