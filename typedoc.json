@@ -1,0 +1,7 @@
+{
+    "plugin": ["typedoc-material-theme"],
+    "entryPointStrategy": "expand",
+    "entryPoints": ["src/**/*"],
+    "excludeReferences": true,
+    "excludeNotDocumented": true
+}
