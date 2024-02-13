@@ -132,6 +132,53 @@ class SelectableGroup {
     }
 
     /**
+     * This method triggers the selection of the new selected button. This is intended for external use only
+     * @param newSelection - The button that will represent the new selection or undefined for no selection.
+     */
+    Select(newSelection: Button | undefined): void {
+        const config: SelectableGroupConfig = this.Config;
+
+        if (newSelection) {
+            if (!this.SelectionGroup.includes(newSelection)) {
+                warn(`Could not select new selection since it doesn't exist in the selection group with button name: ${newSelection.Name}`);
+                return;
+            }
+
+            if (this.IsSelected(newSelection)) {
+                warn("Could not select new selection since it already is selected.");
+                return;
+            }
+
+            if (config.isSingleOnly && this.CurrentSelection[0]) {
+                this.CurrentSelection[0].BorderSizePixel = 0;
+                this.CurrentSelection.pop();
+            }
+
+            this.CurrentSelection.push(newSelection);
+            newSelection.BorderSizePixel = this.Config.borderSize;
+        } else {
+
+            if (!config.isSingleOnly) {
+                warn("Could not select a non existent selection with multi-selections, use UnselectAll() instead.");
+                return;
+            }
+            
+            const selectionsSize: number = this.CurrentSelection.size();
+            if (selectionsSize === 0) {
+                warn("Could not remove selection from selection group no selection is present.");
+                return;
+            }
+            if (config.requireSelection && selectionsSize === 1) {
+                warn("Could not remove selection from selection group; since a selection is required.");
+                return;
+            }
+
+            this.CurrentSelection[0].BorderSizePixel = 0;
+            this.CurrentSelection.pop();
+        }
+    }
+
+    /**
      * Selects all the buttons when Config.isSingleOnly is false.
      * @returns void
      */
