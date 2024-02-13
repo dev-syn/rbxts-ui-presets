@@ -107,8 +107,8 @@ class SelectableGroup {
                         // Check if this btn is already selected
                         const btnIndex: number = this.CurrentSelection.indexOf(btn);
                         if (btnIndex !== -1) {
-                            // If this is the last button selected and a selection is required return
-                            if (this.CurrentSelection.size() === 1 && this.Config.requireSelection) return;
+                            // If a selection is required and this is the last button selected; return
+                            if (this.Config.requireSelection && this.CurrentSelection.size() === 1) return;
 
                             const prevSelection: Button = this.CurrentSelection[0];
                             prevSelection.BorderSizePixel = 0;
@@ -149,20 +149,22 @@ class SelectableGroup {
                 return;
             }
 
-            if (config.isSingleOnly && this.CurrentSelection[0]) {
-                this.CurrentSelection[0].BorderSizePixel = 0;
+            const prevSelection: Button = this.CurrentSelection[0];
+            if (config.isSingleOnly && prevSelection) {
+                prevSelection.BorderSizePixel = 0;
                 this.CurrentSelection.pop();
             }
 
             this.CurrentSelection.push(newSelection);
             newSelection.BorderSizePixel = this.Config.borderSize;
+            this.SelectionChanged.Fire(prevSelection,newSelection);
         } else {
 
             if (!config.isSingleOnly) {
                 warn("Could not select a non existent selection with multi-selections, use UnselectAll() instead.");
                 return;
             }
-            
+
             const selectionsSize: number = this.CurrentSelection.size();
             if (selectionsSize === 0) {
                 warn("Could not remove selection from selection group no selection is present.");
@@ -173,8 +175,10 @@ class SelectableGroup {
                 return;
             }
 
-            this.CurrentSelection[0].BorderSizePixel = 0;
+            const prevSelection: Button = this.CurrentSelection[0];
+            prevSelection.BorderSizePixel = 0;
             this.CurrentSelection.pop();
+            this.SelectionChanged.Fire(prevSelection,undefined);
         }
     }
 
