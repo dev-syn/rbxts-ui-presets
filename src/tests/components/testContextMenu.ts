@@ -9,7 +9,7 @@ sg.Parent = player.WaitForChild("PlayerGui");
 
 const btn: TextButton = new Instance("TextButton");
 btn.Size = new UDim2(0.4,0,0.4,0);
-btn.Position = new UDim2(0.5,0,0.5,0);
+btn.Position = new UDim2(0.5,0,0.85,0);
 btn.AnchorPoint = new Vector2(0.5,0.5);
 btn.Parent = sg;
 
