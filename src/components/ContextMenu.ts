@@ -68,6 +68,7 @@ class ContextMenu {
 
         this.MenuBG.Name = `ContextMenu-${triggerElement.Name}`;
         this.MenuBG.BackgroundColor3 = Color3.fromRGB(64,64,64);
+        this.MenuBG.Visible = true;
 
         this.UIListLayout.FillDirection = Enum.FillDirection.Vertical;
         this.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center;
@@ -75,11 +76,10 @@ class ContextMenu {
 
         this._connections.push(
             triggerElement.MouseButton2Click.Connect(() => {
-                if (!this.MenuBG.Visible) {
+                if (!this.MenuBG.Parent) {
                     this.Draw();
                     this.MenuBG.Parent = this.triggerElement;
                 } else {
-                    this.Draw();
                     this.MenuBG.Parent = undefined;
                 }
             })
