@@ -1,14 +1,14 @@
 {
   "name": "@rbxts/uipresets",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "",
   "main": "out/init.lua",
   "scripts": {
     "prepublishOnly": "npm run build",
-    "postinstall": "rbxtsc"
+    "postinstall": "rbxtsc -p ./tsconfig.json"
   },
   "keywords": [],
-  "author": "",
+  "author": "dev-syn",
   "license": "ISC",
   "types": "out/index.d.ts",
   "files": [
