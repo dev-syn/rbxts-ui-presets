@@ -14,6 +14,7 @@ btn.AnchorPoint = new Vector2(0.5,0.5);
 btn.Parent = sg;
 
 const menu: ContextMenu = new ContextMenu(btn);
+menu.minItemSizeY = 0.5;
 menu.AddContext(new ContextItem("Say Hello",() => print("Hello!")));
 menu.AddContext(new ContextItem("Say Cheese",() => print("Cheese!")));
 menu.AddContext(new ContextItem("Say Smile",() => print("Smile!")));
