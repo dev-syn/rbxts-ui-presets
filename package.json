@@ -1,6 +1,6 @@
 {
   "name": "@rbxts/uipresets",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "",
   "main": "out/init.lua",
   "scripts": {
@@ -26,6 +26,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@rbxts/beacon": "^2.1.1"
+    "@rbxts/beacon": "^2.1.1",
+    "@rbxts/t": "^3.1.1"
   }
 }
