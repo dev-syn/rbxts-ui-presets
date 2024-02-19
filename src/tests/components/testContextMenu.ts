@@ -15,9 +15,6 @@ btn.Parent = sg;
 
 const menu: ContextMenu = new ContextMenu(btn);
 menu.AddContext(new ContextItem("Say Hello",() => print("Hello!")));
+menu.AddContext(new ContextItem("Say Cheese",() => print("Cheese!")));
+menu.AddContext(new ContextItem("Say Smile",() => print("Smile!")));
 menu.AddContext(new ContextItem("Say Goodbye",() => print("Goodbye!")));
-
-while(true) {
-    print("Still running: " + menu);
-    task.wait(2);
-}
