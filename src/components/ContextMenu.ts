@@ -97,11 +97,14 @@ class ContextMenu {
         const activeContexts: ContextItem[] = this.GetActiveContexts();
         const contextSize: number = activeContexts.size();
 
+        const unitSize = this.triggerElement.AbsoluteSize.Y / contextSize;
+        
         const absSizeX = this.triggerElement.AbsoluteSize.X;
-        this.MenuBG.Size = new UDim2(0,absSizeX * this.minSizeX,0,this.triggerElement.AbsoluteSize.Y);
+        this.MenuBG.Size = new UDim2(0,absSizeX * this.minSizeX,0,this.triggerElement.AbsoluteSize.Y + unitSize * 2);
         this.MenuBG.Position = new UDim2(0,this.triggerElement.AbsolutePosition.X + (absSizeX * 0.25),0,0);
 
-        const unitSize = this.triggerElement.AbsoluteSize.Y / contextSize;
+        this.UIListLayout.Padding = new UDim(0,2);
+        
         activeContexts.forEach(c => {
             c.btn.Size = new UDim2(1,0,0,unitSize);
             c.btn.Parent = this.MenuBG;
