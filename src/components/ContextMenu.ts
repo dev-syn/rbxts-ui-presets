@@ -59,7 +59,10 @@ class ContextMenu {
     UIListLayout: UIListLayout = new Instance("UIListLayout");
 
     /** A number between 0 and 1 representing a percent of the parent triggerElement x size. */
-    minSizeX: number = 0.4;
+    minMenuSizeX: number = 0.4;
+
+    minItemSizeY: number = 0.33;
+
 
     private _contexts: ContextItem[] = [];
     private _connections: RBXScriptConnection[] = [];
@@ -70,6 +73,7 @@ class ContextMenu {
         this.MenuBG.Name = `ContextMenu-${triggerElement.Name}`;
         this.MenuBG.BackgroundColor3 = Color3.fromRGB(64,64,64);
         this.MenuBG.Visible = true;
+        this.MenuBG.AnchorPoint = new Vector2(0,0.5);
 
         this.UIListLayout.FillDirection = Enum.FillDirection.Vertical;
         this.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center;
@@ -97,16 +101,24 @@ class ContextMenu {
         const activeContexts: ContextItem[] = this.GetActiveContexts();
         const contextSize: number = activeContexts.size();
 
-        const unitSize = this.triggerElement.AbsoluteSize.Y / contextSize;
-        
-        const absSizeX = this.triggerElement.AbsoluteSize.X;
-        this.MenuBG.Size = new UDim2(0,absSizeX * this.minSizeX,0,this.triggerElement.AbsoluteSize.Y + unitSize * 2);
-        this.MenuBG.Position = new UDim2(0,this.triggerElement.AbsolutePosition.X + (absSizeX * 0.25),0,0);
+        if (contextSize === 0) return;
 
-        this.UIListLayout.Padding = new UDim(0,2);
+        // The absolute size of the trigger element
+        const absSizeY: number = this.triggerElement.AbsoluteSize.Y;
+
+        // How much size should each context get evenly
+        const unitSize = absSizeY / contextSize;
+        // If any overflow size is needed; by how much
+        const overflowSize = math.max(absSizeY * this.minItemSizeY - unitSize,0);
+        // How much size should each context get accounting for overflow
+        const overflowUnit = overflowSize / contextSize;
+
+        const absSizeX = this.triggerElement.AbsoluteSize.X;
+        this.MenuBG.Size = new UDim2(0,absSizeX * this.minMenuSizeX,0,absSizeY + overflowSize);
+        this.MenuBG.Position = new UDim2(0,this.triggerElement.AbsolutePosition.X + (absSizeX * 0.25),0,this.MenuBG.AbsoluteSize.Y / 2);
         
         activeContexts.forEach(c => {
-            c.btn.Size = new UDim2(1,0,0,unitSize);
+            c.btn.Size = new UDim2(1,0,0,unitSize + overflowUnit);
             c.btn.Parent = this.MenuBG;
         });
     }
