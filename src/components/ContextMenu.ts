@@ -124,8 +124,12 @@ class ContextMenu {
         const centerTopPos = this.MenuBG.AbsolutePosition.Y - this.MenuBG.AbsoluteSize.Y / 2;
         const centerBottomPos = this.MenuBG.AbsolutePosition.Y + this.MenuBG.AbsoluteSize.Y / 2;
         if (this.viewSize) {
+            print("View Size: ",this.viewSize);
             if (centerTopPos < 0) this.MenuBG.Position.sub(new UDim2(0,0,0,centerTopPos));
             if (centerBottomPos > this.viewSize.Y) this.MenuBG.Position.add(new UDim2(0,0,0,this.viewSize.Y - centerBottomPos));
+
+            print("Center Top Pos: ",centerTopPos);
+            print("Center Bottom Pos: " + centerBottomPos);
         }
 
         const minSizeUnit: number = absSizeY * this.minItemSizeY;
