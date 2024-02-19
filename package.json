@@ -13,8 +13,7 @@
   "types": "out/index.d.ts",
   "files": [
     "out",
-    "!**/*.tsbuildinfo",
-    "!tests"
+    "!**/*.tsbuildinfo"
   ],
   "publishConfig": {
     "access": "public"
