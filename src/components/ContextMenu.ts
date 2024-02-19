@@ -60,15 +60,18 @@ class ContextMenu {
 
     /** A number between 0 and 1 representing a percent of the parent triggerElement x size. */
     minMenuSizeX: number = 0.4;
-
     minItemSizeY: number = 0.33;
 
+    viewSize?: Vector2;
 
     private _contexts: ContextItem[] = [];
     private _connections: RBXScriptConnection[] = [];
 
     constructor(triggerElement: Button) {
         if (!(t.instanceIsA("TextButton") || t.instanceIsA("ImageButton"))) error("TriggerElement must be an instance of TextButton | ImageButton.");
+
+        const ancestorSG: ScreenGui | undefined = triggerElement.FindFirstAncestorWhichIsA("ScreenGui");
+        if (ancestorSG) this.viewSize = ancestorSG.AbsoluteSize;
 
         this.MenuBG.Name = `ContextMenu-${triggerElement.Name}`;
         this.MenuBG.BackgroundColor3 = Color3.fromRGB(64,64,64);
@@ -114,9 +117,17 @@ class ContextMenu {
         const overflow = overflowSize * contextSize;
 
         const absSizeX = this.triggerElement.AbsoluteSize.X;
+
         this.MenuBG.Size = new UDim2(0,absSizeX * this.minMenuSizeX,0,absSizeY + overflow);
         this.MenuBG.Position = new UDim2(0,this.triggerElement.AbsolutePosition.X + (absSizeX * 0.25),0,this.MenuBG.AbsoluteSize.Y / 2 - overflow / 2);
-        
+
+        const centerTopPos = this.MenuBG.AbsolutePosition.Y - this.MenuBG.AbsoluteSize.Y / 2;
+        const centerBottomPos = this.MenuBG.AbsolutePosition.Y + this.MenuBG.AbsoluteSize.Y / 2;
+        if (this.viewSize) {
+            if (centerTopPos < 0) this.MenuBG.Position.sub(new UDim2(0,0,0,centerTopPos));
+            if (centerBottomPos > this.viewSize.Y) this.MenuBG.Position.add(new UDim2(0,0,0,this.viewSize.Y - centerBottomPos));
+        }
+
         const minSizeUnit: number = absSizeY * this.minItemSizeY;
         activeContexts.forEach(c => {
             c.btn.Size = new UDim2(1,0,0,minSizeUnit);
