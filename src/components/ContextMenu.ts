@@ -111,14 +111,15 @@ class ContextMenu {
         // If any overflow size is needed; by how much
         const overflowSize = math.max(absSizeY * this.minItemSizeY - unitSize,0);
         // How much size should each context get accounting for overflow
-        const overflowUnit = overflowSize / contextSize;
+        const overflow = overflowSize * contextSize;
 
         const absSizeX = this.triggerElement.AbsoluteSize.X;
-        this.MenuBG.Size = new UDim2(0,absSizeX * this.minMenuSizeX,0,absSizeY + overflowSize);
-        this.MenuBG.Position = new UDim2(0,this.triggerElement.AbsolutePosition.X + (absSizeX * 0.25),0,this.MenuBG.AbsoluteSize.Y / 2 - overflowSize / 2);
+        this.MenuBG.Size = new UDim2(0,absSizeX * this.minMenuSizeX,0,absSizeY + overflow);
+        this.MenuBG.Position = new UDim2(0,this.triggerElement.AbsolutePosition.X + (absSizeX * 0.25),0,this.MenuBG.AbsoluteSize.Y / 2 - overflow / 2);
         
+        const minSizeUnit: number = absSizeY * this.minItemSizeY;
         activeContexts.forEach(c => {
-            c.btn.Size = new UDim2(1,0,0,unitSize + overflowUnit);
+            c.btn.Size = new UDim2(1,0,0,minSizeUnit);
             c.btn.Parent = this.MenuBG;
         });
     }
