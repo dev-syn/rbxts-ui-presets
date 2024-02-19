@@ -20,6 +20,7 @@ class ContextItem {
         this.btn.BackgroundColor3 = Color3.fromRGB(64,64,64);
         this.btn.TextColor3 = Color3.fromRGB(255,255,255);
         this.btn.AutoButtonColor = true;
+        this.btn.Text = this.name;
 
         this._connection = this.btn.MouseButton1Click.Connect(() => this._action());
         this.btn.Visible = true;
