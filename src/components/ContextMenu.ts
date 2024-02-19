@@ -127,8 +127,8 @@ class ContextMenu {
             
             if (centerTopPos < 0)
                 this.MenuBG.Position = this.MenuBG.Position.add(new UDim2(0,0,0,math.abs(centerTopPos)));
-            if (centerBottomPos > this.viewSize.Y)
-                this.MenuBG.Position = this.MenuBG.Position.sub(new UDim2(0,0,0,math.abs(this.viewSize.Y - centerBottomPos)));
+            if (centerBottomPos > this.viewSize.Y / 2)
+                this.MenuBG.Position = this.MenuBG.Position.sub(new UDim2(0,0,0,math.abs(this.viewSize.Y / 2 - centerBottomPos)));
 
         }
 
