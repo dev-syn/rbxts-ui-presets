@@ -101,7 +101,10 @@ class ContextMenu {
         this.MenuBG.Position = new UDim2(0,this.triggerElement.AbsolutePosition.X + (absSizeX * 0.5),0,0);
 
         const unitSize = this.triggerElement.AbsoluteSize.Y / contextSize;
-        activeContexts.forEach(c => c.btn.Size = new UDim2(1,0,0,unitSize));
+        activeContexts.forEach(c => {
+            c.btn.Size = new UDim2(1,0,0,unitSize);
+            c.btn.Parent = this.MenuBG;
+        });
     }
 
     AddContext(context: ContextItem) {
