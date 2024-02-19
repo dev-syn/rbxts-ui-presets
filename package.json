@@ -5,7 +5,7 @@
   "main": "out/init.lua",
   "scripts": {
     "prepublishOnly": "npm run build",
-    "postinstall": "rbxtsc -p ./tsconfig.json"
+    "install": "rbxtsc -p ./tsconfig.json"
   },
   "keywords": [],
   "author": "dev-syn",
