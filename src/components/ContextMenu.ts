@@ -77,10 +77,10 @@ class ContextMenu {
             triggerElement.MouseButton2Click.Connect(() => {
                 if (!this.MenuBG.Visible) {
                     this.Draw();
-                    this.MenuBG.Visible = true;
+                    this.MenuBG.Parent = this.triggerElement;
                 } else {
                     this.Draw();
-                    this.MenuBG.Visible = false;
+                    this.MenuBG.Parent = undefined;
                 }
             })
         );
