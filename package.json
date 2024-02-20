@@ -1,20 +1,17 @@
 {
   "name": "@rbxts/uipresets",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "",
   "main": "out/init.lua",
   "scripts": {
-    "postinstall": "rbxtsc",
-    "postpack": "rimraf src"
+    "prepublishOnly": "rbxtsc"
   },
-  "keywords": [],
+  "keywords": ["roblox-ts","rbxtsc","roblox"],
   "author": "dev-syn",
-  "license": "ISC",
+  "license": "MIT",
   "types": "out/index.d.ts",
   "files": [
-    "src",
     "out",
-    "tsconfig.json",
     "!**/*.tsbuildinfo"
   ],
   "publishConfig": {
@@ -24,12 +21,11 @@
     "@rbxts/compiler-types": "^2.2.0-types.0",
     "@rbxts/types": "^1.0.750",
     "typedoc-material-theme": "^1.0.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "roblox-ts": "^2.2.0"
   },
   "dependencies": {
     "@rbxts/beacon": "^2.1.1",
-    "@rbxts/t": "^3.1.1",
-    "roblox-ts": "^2.2.0",
-    "rimraf": "^5.0.5"
+    "@rbxts/t": "^3.1.1"
   }
 }
