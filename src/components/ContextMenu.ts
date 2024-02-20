@@ -4,14 +4,33 @@ type Button = TextButton | ImageButton;
 
 type Callback = () => void;
 
+/**
+ * ContextItem is the makeup of each item available in the ContextMenu.
+ */
 class ContextItem {
+    /** The name of this ContextItem. */
     name: string;
+    /** The btn that triggers this items _action. */
     btn: TextButton = new Instance("TextButton");
+    /** Tracks whether this ContextItem is active or not. */
     isActive: boolean = true;
 
+    /**
+     * @private
+     * The btn connection to trigger the action.
+     */
     private _connection?: RBXScriptConnection;
+    /**
+     * @private
+     * The action that this ContextItem will trigger when clicked.
+     */
     private _action: Callback;
 
+    /**
+     * Constructs a new ContextItem object.
+     * @param name - The name of this ContextItem
+     * @param action - The action of this ContextItem
+     */
     constructor(name: string,action: Callback) {
         this.name = name;
         this._action = action;
@@ -26,7 +45,11 @@ class ContextItem {
         this.btn.Visible = true;
     }
 
-    SetActive(active: boolean) {
+    /**
+     * Sets the active state of this ContextItem.
+     * @param active - Whether to set the ContextItem to active or not
+     */
+    SetActive(active: boolean): void {
         if (active) {
             // If there is already a connection then we are already active
             if (this.isActive || this._connection) return;
@@ -46,27 +69,51 @@ class ContextItem {
         }
     }
 
-    Destroy() {
+    /** Destroys this ContextItem. */
+    Destroy(): void {
         this.btn.Destroy();
         this._connection = undefined;
     }
 }
 
+/**
+ * ContextMenu adds a context menu to any "Button"(TextButton|ImageButton) which is activated when the triggerElement is right clicked.
+ * This is still experimental and will likely receive many changes in the future.
+ */
 class ContextMenu {
+    /** The button element that triggers this ContextMenu */
     triggerElement: Button;
 
+    /** The ContextMenu background Frame Instance. */
     MenuBG: Frame = new Instance("Frame");
+    /** The UIListLayout that maintains the ContextItem positions. */
     UIListLayout: UIListLayout = new Instance("UIListLayout");
 
     /** A number between 0 and 1 representing a percent of the parent triggerElement x size. */
     minMenuSizeX: number = 0.4;
+    /** A number between 0 and 1 representing the minimum ContextItem size on the y axis. */
     minItemSizeY: number = 0.33;
 
-    viewSize?: Vector2;
-
+    /**
+     * @private
+     * Stores the absolute ViewSize of the clients screen.
+     */
+    private viewSize?: Vector2;
+    /**
+     * @private
+     * The ContextItems that belong to this ContextMenu.
+     */
     private _contexts: ContextItem[] = [];
+    /**
+     * @private
+     * The connections that belong to this ContextMenu.
+     */
     private _connections: RBXScriptConnection[] = [];
 
+    /**
+     * Constructs a new ContextMenu object.
+     * @param triggerElement - The button element that triggers this ContextMenu.
+     */
     constructor(triggerElement: Button) {
         if (!(t.instanceIsA("TextButton") || t.instanceIsA("ImageButton"))) error("TriggerElement must be an instance of TextButton | ImageButton.");
 
@@ -98,9 +145,16 @@ class ContextMenu {
         this.triggerElement = triggerElement;
     }
 
+    /**
+     * Gets all the active ContextItems belonging to this ContextMenu.
+     * @returns - An array of ContextItem.
+     */
     GetActiveContexts(): ContextItem[] { return this._contexts.filter(c => c.isActive); }
 
-    Draw() {
+    /**
+     * Draws the sizing and positioning for both the ContextMenu and ContextItems that are active.
+     */
+    Draw(): void {
         const activeContexts: ContextItem[] = this.GetActiveContexts();
         const contextSize: number = activeContexts.size();
 
@@ -139,19 +193,34 @@ class ContextMenu {
         });
     }
 
+    /**
+     * Adds the given ContextItem to this ContextMenu.
+     * @param context - The ContextItem object to add
+     */
     AddContext(context: ContextItem) {
         this._contexts.push(context);
     }
 
+    /**
+     * Removes the given ContextItem from this ContextMenu.
+     * @param context - The ContextItem object to remove
+     */
     RemoveContext(context: ContextItem) {
         const index: number = this._contexts.indexOf(context);
         if (index !== -1) this._contexts.remove(index);
     }
 
+    /**
+     * Clears all ContextItems from this ContextMenu internally destroying each ContextItem.
+     */
     Clear() {
+        this._contexts.forEach(c => c.Destroy());
         this._contexts.clear();
     }
 
+    /**
+     * Destroys this ContextMenu object.
+     */
     Destroy() {
         // Remove UIListLayout for unnecessary work
         this.UIListLayout.Parent = undefined;
