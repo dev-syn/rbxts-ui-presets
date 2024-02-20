@@ -1,4 +1,4 @@
-import { SelectableGroup } from './presets/SelectableGroup';
+import { SelectableGroup } from './components/SelectableGroup';
 
 /**
  * This module contains references to all the UIPresets modules.
