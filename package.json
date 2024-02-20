@@ -4,8 +4,7 @@
   "description": "",
   "main": "out/init.lua",
   "scripts": {
-    "prepublishOnly": "npm run build",
-    "install": "rbxtsc -p ./tsconfig.json"
+    "install": "rbxtsc"
   },
   "keywords": [],
   "author": "dev-syn",
@@ -13,6 +12,7 @@
   "types": "out/index.d.ts",
   "files": [
     "out",
+    "tsconfig.json",
     "!**/*.tsbuildinfo"
   ],
   "publishConfig": {
