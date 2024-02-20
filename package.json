@@ -4,13 +4,15 @@
   "description": "",
   "main": "out/init.lua",
   "scripts": {
-    "install": "rbxtsc"
+    "postinstall": "rbxtsc",
+    "postpack": "rimraf src"
   },
   "keywords": [],
   "author": "dev-syn",
   "license": "ISC",
   "types": "out/index.d.ts",
   "files": [
+    "src",
     "out",
     "tsconfig.json",
     "!**/*.tsbuildinfo"
@@ -21,12 +23,13 @@
   "devDependencies": {
     "@rbxts/compiler-types": "^2.2.0-types.0",
     "@rbxts/types": "^1.0.750",
-    "roblox-ts": "^2.2.0",
     "typedoc-material-theme": "^1.0.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "@rbxts/beacon": "^2.1.1",
-    "@rbxts/t": "^3.1.1"
+    "@rbxts/t": "^3.1.1",
+    "roblox-ts": "^2.2.0",
+    "rimraf": "^5.0.5"
   }
 }
