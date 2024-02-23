@@ -140,7 +140,7 @@ class ContextMenu {
         // Get the updated screen size
         const ancestorSG: ScreenGui | undefined = this.triggerElement.FindFirstAncestorWhichIsA("ScreenGui");
         if (ancestorSG) this.viewSize = ancestorSG.AbsoluteSize;
-        else error("No ScreenGui ancestor found.");
+        else this.viewSize = game.Workspace.CurrentCamera ? game.Workspace.CurrentCamera.ViewportSize : error("No screen size is available for ContextMenu.");
 
         const activeContexts: ContextItem[] = this.GetActiveContexts();
         const contextSize: number = activeContexts.size();
@@ -171,22 +171,20 @@ class ContextMenu {
 
 // #region ROWS_COLUMNS
 
+        // Is the trigger element positioned over half the screen
         const isSizeOverHalf: boolean = absPosY > this.viewSize.Y / 2;
 
         let availableYPixels: number;
         if (isSizeOverHalf) {
-            print(`topAbsPosY: ${topAbsPosY} minItemAbsSizeY: ${minItemAbsSizeY}`);
-            // TODO: Prioritize pushing the context menu upwards before more columns
+            // Prioritize pushing the context menu upwards before more columns
             availableYPixels = topAbsPosY + minItemAbsSizeY;
-            print(`Available Points: ${availableYPixels}`);
         } else {
             // Check how much space is available going down
             availableYPixels = this.viewSize.Y - topAbsPosY;
         }
 
-        // Calculate the rows available from the minimum size / available pixels
+        // Calculate the rows available from the (minimum size / available pixels)
         let rows: number = math.floor(availableYPixels / minItemAbsSizeY);
-        print("availableYPixels / minItemAbsSizeY = ",availableYPixels / minItemAbsSizeY);
 
         // If there are less rows than context lower rows to contextSize
         if (rows > contextSize) rows = contextSize;
@@ -195,16 +193,13 @@ class ContextMenu {
         let columns: number = 1;
 
         // If there is more items then rows available then create columns
-        if (rows < contextSize) {
+        if (rows > 0 && rows < contextSize)
             columns = math.ceil(contextSize / rows);
-        }
-
-        print(`Rows: ${rows} Columns: ${columns}`);
 
         // Set the size of MenuBG x based on amount of columns and y based on rows
         this.MenuBG.Size = new UDim2(0,columns * usedXPixels,0,rows * minItemAbsSizeY);
 
-        if (isSizeOverHalf) this.MenuBG.Position = new UDim2(1,0,0,-(this.MenuBG.AbsoluteSize.Y - minItemAbsSizeY));
+        if (isSizeOverHalf) this.MenuBG.Position = new UDim2(1,0,0,-(this.MenuBG.AbsoluteSize.Y - ( 1 / this.minItemSizeY) * minItemAbsSizeY));
 
         let itemIndex: number = 0;
 
@@ -216,6 +211,7 @@ class ContextMenu {
                 const item: ContextItem = activeContexts[itemIndex];
                 // If out of items then break
                 if (!item) break;
+                
                 item.btn.Size = new UDim2(0,usedXPixels,0,minItemAbsSizeY);
                 item.btn.Position = lastPos.add(new UDim2(0,0,0,minItemAbsSizeY));
                 lastPos = item.btn.Position;
