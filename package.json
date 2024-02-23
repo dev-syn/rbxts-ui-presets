@@ -6,7 +6,11 @@
   "scripts": {
     "prepublishOnly": "rbxtsc"
   },
-  "keywords": ["roblox-ts","rbxtsc","roblox"],
+  "keywords": [
+    "roblox-ts",
+    "rbxtsc",
+    "roblox"
+  ],
   "author": "dev-syn",
   "license": "MIT",
   "types": "out/index.d.ts",
@@ -20,12 +24,13 @@
   "devDependencies": {
     "@rbxts/compiler-types": "^2.2.0-types.0",
     "@rbxts/types": "^1.0.750",
+    "roblox-ts": "^2.2.0",
     "typedoc-material-theme": "^1.0.2",
-    "typescript": "^5.3.3",
-    "roblox-ts": "^2.2.0"
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "@rbxts/beacon": "^2.1.1",
-    "@rbxts/t": "^3.1.1"
+    "@rbxts/t": "^3.1.1",
+    "typedoc": "^0.25.8"
   }
 }
