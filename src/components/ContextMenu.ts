@@ -76,23 +76,15 @@ class ContextItem {
     }
 }
 
-/**
- * ContextMenu adds a context menu to any "Button"(TextButton|ImageButton) which is activated when the triggerElement is right clicked.
- * This is still experimental and will likely receive many changes in the future.
- */
 class ContextMenu {
     /** The button element that triggers this ContextMenu */
     triggerElement: Button;
 
     /** The ContextMenu background Frame Instance. */
     MenuBG: Frame = new Instance("Frame");
-    /** The UIListLayout that maintains the ContextItem positions. */
-    UIListLayout: UIListLayout = new Instance("UIListLayout");
 
-    /** A number between 0 and 1 representing a percent of the parent triggerElement x size. */
-    minMenuSizeX: number = 0.4;
-    /** A number between 0 and 1 representing the minimum ContextItem size on the y axis. */
-    minItemSizeY: number = 0.33;
+    /** A number above zero representing the minimum ContextItem size on the y axis. */
+    minItemSizeY: number = 1;
 
     /**
      * @private
@@ -117,17 +109,12 @@ class ContextMenu {
     constructor(triggerElement: Button) {
         if (!(t.instanceIsA("TextButton") || t.instanceIsA("ImageButton"))) error("TriggerElement must be an instance of TextButton | ImageButton.");
 
-        const ancestorSG: ScreenGui | undefined = triggerElement.FindFirstAncestorWhichIsA("ScreenGui");
-        if (ancestorSG) this.viewSize = ancestorSG.AbsoluteSize;
-
         this.MenuBG.Name = `ContextMenu-${triggerElement.Name}`;
         this.MenuBG.BackgroundColor3 = Color3.fromRGB(64,64,64);
         this.MenuBG.Visible = true;
-        this.MenuBG.AnchorPoint = new Vector2(0,0.5);
 
-        this.UIListLayout.FillDirection = Enum.FillDirection.Vertical;
-        this.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center;
-        this.UIListLayout.Parent = this.MenuBG;
+        // Position the MenuBG to the right of the trigger element
+        this.MenuBG.Position = new UDim2(1,0,0,0);
 
         this._connections.push(
             triggerElement.MouseButton2Click.Connect(() => {
@@ -146,52 +133,107 @@ class ContextMenu {
     }
 
     /**
-     * Gets all the active ContextItems belonging to this ContextMenu.
-     * @returns - An array of ContextItem.
-     */
-    GetActiveContexts(): ContextItem[] { return this._contexts.filter(c => c.isActive); }
-
-    /**
      * Draws the sizing and positioning for both the ContextMenu and ContextItems that are active.
      */
     Draw(): void {
+
+        // Get the updated screen size
+        const ancestorSG: ScreenGui | undefined = this.triggerElement.FindFirstAncestorWhichIsA("ScreenGui");
+        if (ancestorSG) this.viewSize = ancestorSG.AbsoluteSize;
+        else error("No ScreenGui ancestor found.");
+
         const activeContexts: ContextItem[] = this.GetActiveContexts();
         const contextSize: number = activeContexts.size();
 
+        // If no context; don't draw anything
         if (contextSize === 0) return;
+        // If minItemSizeY was set to zero, assign it 1.
+        if (this.minItemSizeY === 0) this.minItemSizeY = 1;
+
 
         // The absolute size of the trigger element
         const absSizeY: number = this.triggerElement.AbsoluteSize.Y;
 
-        // How much size should each context get evenly
-        const unitSize = absSizeY / contextSize;
-        // If any overflow size is needed; by how much
-        const overflowSize = math.max(absSizeY * this.minItemSizeY - unitSize,0);
-        // How much size should each context get accounting for overflow
-        const overflow = overflowSize * contextSize;
+        // The absolute position of the trigger element
+        const absPosY: number = this.triggerElement.AbsolutePosition.Y;
 
-        const absSizeX = this.triggerElement.AbsoluteSize.X;
+        // The minimum absolute size of each context item
+        const minItemAbsSizeY: number = this.minItemSizeY * absSizeY;
 
-        this.MenuBG.Size = new UDim2(0,absSizeX * this.minMenuSizeX,0,absSizeY + overflow);
-        this.MenuBG.Position = new UDim2(0,this.triggerElement.AbsolutePosition.X + (absSizeX * 0.25),0,this.MenuBG.AbsoluteSize.Y / 2 - overflow / 2);
+        // Get the used amount of space on the x axis in pixels of each context item
+        const usedXPixels: number = 1 * this.triggerElement.AbsoluteSize.X;
 
-        const centerTopPos = this.MenuBG.AbsolutePosition.Y - this.MenuBG.AbsoluteSize.Y / 2;
-        const centerBottomPos = this.MenuBG.AbsolutePosition.Y + this.MenuBG.AbsoluteSize.Y / 2;
-        if (this.viewSize) {
-            
-            if (centerTopPos < 0)
-                this.MenuBG.Position = this.MenuBG.Position.add(new UDim2(0,0,0,math.abs(centerTopPos)));
-            if (centerBottomPos > this.viewSize.Y)
-                this.MenuBG.Position = this.MenuBG.Position.sub(new UDim2(0,0,0,centerBottomPos));
+        // Calculate the absolute position of the element from the top
+        const yAnchor: number = this.triggerElement.AnchorPoint.Y;
+        
+        // Calculate the top left absolute position of the trigger element
+        const topAbsPosY: number = absPosY - absSizeY * yAnchor;
 
+// #region ROWS_COLUMNS
+
+        const isSizeOverHalf: boolean = absPosY > this.viewSize.Y / 2;
+
+        let availableYPixels: number;
+        if (isSizeOverHalf) {
+            print(`topAbsPosY: ${topAbsPosY} minItemAbsSizeY: ${minItemAbsSizeY}`);
+            // TODO: Prioritize pushing the context menu upwards before more columns
+            availableYPixels = topAbsPosY + minItemAbsSizeY;
+            print(`Available Points: ${availableYPixels}`);
+        } else {
+            // Check how much space is available going down
+            availableYPixels = this.viewSize.Y - topAbsPosY;
         }
 
-        const minSizeUnit: number = absSizeY * this.minItemSizeY;
-        activeContexts.forEach(c => {
-            c.btn.Size = new UDim2(1,0,0,minSizeUnit);
-            c.btn.Parent = this.MenuBG;
-        });
+        // Calculate the rows available from the minimum size / available pixels
+        let rows: number = math.floor(availableYPixels / minItemAbsSizeY);
+        print("availableYPixels / minItemAbsSizeY = ",availableYPixels / minItemAbsSizeY);
+
+        // If there are less rows than context lower rows to contextSize
+        if (rows > contextSize) rows = contextSize;
+
+        // There is always one column
+        let columns: number = 1;
+
+        // If there is more items then rows available then create columns
+        if (rows < contextSize) {
+            columns = math.ceil(contextSize / rows);
+        }
+
+        print(`Rows: ${rows} Columns: ${columns}`);
+
+        // Set the size of MenuBG x based on amount of columns and y based on rows
+        this.MenuBG.Size = new UDim2(0,columns * usedXPixels,0,rows * minItemAbsSizeY);
+
+        if (isSizeOverHalf) this.MenuBG.Position = new UDim2(1,0,0,-(this.MenuBG.AbsoluteSize.Y - minItemAbsSizeY));
+
+        let itemIndex: number = 0;
+
+        // Negate the minimum abs size for first element
+        let lastPos: UDim2 = new UDim2(0,0,0,-minItemAbsSizeY);
+
+        for (let columnIndex = 0; columnIndex < columns; columnIndex++) {
+            for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
+                const item: ContextItem = activeContexts[itemIndex];
+                // If out of items then break
+                if (!item) break;
+                item.btn.Size = new UDim2(0,usedXPixels,0,minItemAbsSizeY);
+                item.btn.Position = lastPos.add(new UDim2(0,0,0,minItemAbsSizeY));
+                lastPos = item.btn.Position;
+                itemIndex++;
+            }
+            lastPos = new UDim2(0,usedXPixels * (columnIndex + 1),0,-minItemAbsSizeY);
+        }
+// #endregion
+
+        // Parent each context item button to the MenuBG
+        activeContexts.forEach(c => c.btn.Parent = this.MenuBG);
     }
+
+    /**
+     * Gets all the active ContextItems belonging to this ContextMenu.
+     * @returns - An array of ContextItem.
+     */
+    GetActiveContexts(): ContextItem[] { return this._contexts.filter(c => c.isActive); }
 
     /**
      * Adds the given ContextItem to this ContextMenu.
@@ -222,8 +264,6 @@ class ContextMenu {
      * Destroys this ContextMenu object.
      */
     Destroy() {
-        // Remove UIListLayout for unnecessary work
-        this.UIListLayout.Parent = undefined;
 
         // Destroy each ContextItem
         this._contexts.forEach(item => item.Destroy());
@@ -237,4 +277,4 @@ class ContextMenu {
     }
 }
 
-export { ContextMenu, ContextItem };
+export { ContextMenu, ContextItem, Button, Callback };
