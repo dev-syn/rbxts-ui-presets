@@ -77,6 +77,15 @@ class ContextItem {
 }
 
 class ContextMenu {
+
+    static ContextMenuSG: ScreenGui = new Instance("ScreenGui");
+
+    static {
+        this.ContextMenuSG.Name = "ContextMenuSG";
+        this.ContextMenuSG.DisplayOrder = 10000;
+        this.ContextMenuSG.ResetOnSpawn = false;
+        this.ContextMenuSG.Parent = game.GetService("Players").LocalPlayer.WaitForChild("PlayerGui");
+    }
     /** The button element that triggers this ContextMenu */
     triggerElement: Button;
 
@@ -116,15 +125,21 @@ class ContextMenu {
         // Position the MenuBG to the right of the trigger element
         this.MenuBG.Position = new UDim2(1,0,0,0);
 
+        // When the trigger element is right clicked draw and display the context menu
         this._connections.push(
             triggerElement.MouseButton2Click.Connect(() => {
                 if (!this.MenuBG.Parent) {
                     this.Draw();
-                    this.MenuBG.Parent = this.triggerElement;
+                    this.MenuBG.Parent = ContextMenu.ContextMenuSG;
                 } else {
                     this.MenuBG.Parent = undefined;
                 }
             })
+        );
+        
+        // When the trigger element's position is changed, redraw the context menu.
+        this._connections.push(
+            triggerElement.GetPropertyChangedSignal("Position").Connect(() => this.Draw())
         );
 
         triggerElement.Destroying.Connect(() => this.Destroy());
@@ -138,9 +153,7 @@ class ContextMenu {
     Draw(): void {
 
         // Get the updated screen size
-        const ancestorSG: ScreenGui | undefined = this.triggerElement.FindFirstAncestorWhichIsA("ScreenGui");
-        if (ancestorSG) this.viewSize = ancestorSG.AbsoluteSize;
-        else this.viewSize = game.Workspace.CurrentCamera ? game.Workspace.CurrentCamera.ViewportSize : error("No screen size is available for ContextMenu.");
+        this.viewSize = ContextMenu.ContextMenuSG.AbsoluteSize;
 
         const activeContexts: ContextItem[] = this.GetActiveContexts();
         const contextSize: number = activeContexts.size();
@@ -161,21 +174,24 @@ class ContextMenu {
         const minItemAbsSizeY: number = this.minItemSizeY * absSizeY;
 
         // Get the used amount of space on the x axis in pixels of each context item
-        const usedXPixels: number = 1 * this.triggerElement.AbsoluteSize.X;
+        const usedXPixels: number = this.triggerElement.AbsoluteSize.X;
 
         // Calculate the absolute position of the element from the top
         const yAnchor: number = this.triggerElement.AnchorPoint.Y;
         
-        // Calculate the top left absolute position of the trigger element
+        // Calculate the top left absolute y position of the trigger element
         const topAbsPosY: number = absPosY - absSizeY * yAnchor;
+
+        // Calculate the left absolute x position of the trigger element
+        const leftAbsPosX: number = this.triggerElement.AbsolutePosition.X - this.triggerElement.AbsoluteSize.X * this.triggerElement.AnchorPoint.X;
 
 // #region ROWS_COLUMNS
 
-        // Is the trigger element positioned over half the screen
-        const isSizeOverHalf: boolean = absPosY > this.viewSize.Y / 2;
+        // Is the trigger element positioned over half the y screen
+        const isSizeOverHalfY: boolean = absPosY > this.viewSize.Y / 2;
 
         let availableYPixels: number;
-        if (isSizeOverHalf) {
+        if (isSizeOverHalfY) {
             // Prioritize pushing the context menu upwards before more columns
             availableYPixels = topAbsPosY + minItemAbsSizeY;
         } else {
@@ -199,7 +215,15 @@ class ContextMenu {
         // Set the size of MenuBG x based on amount of columns and y based on rows
         this.MenuBG.Size = new UDim2(0,columns * usedXPixels,0,rows * minItemAbsSizeY);
 
-        if (isSizeOverHalf) this.MenuBG.Position = new UDim2(1,0,0,-(this.MenuBG.AbsoluteSize.Y - ( 1 / this.minItemSizeY) * minItemAbsSizeY));
+        // Calculate the right absolute position of the trigger element
+        const rightAbsPosX: number = leftAbsPosX + usedXPixels;
+
+        if (isSizeOverHalfY) this.MenuBG.Position = new UDim2(0,rightAbsPosX,0,topAbsPosY + -(this.MenuBG.AbsoluteSize.Y - ( 1 / this.minItemSizeY) * minItemAbsSizeY));
+        else this.MenuBG.Position = new UDim2(0,rightAbsPosX,0,topAbsPosY);
+
+        // Is the trigger element positioned over half the y screen
+        const isSizeOverHalfX: boolean = leftAbsPosX > this.viewSize.X / 2;
+        if (isSizeOverHalfX) this.MenuBG.Position = this.MenuBG.Position.sub(new UDim2(0,usedXPixels + usedXPixels * columns,0,0));
 
         let itemIndex: number = 0;
 
