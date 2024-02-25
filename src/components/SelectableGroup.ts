@@ -73,7 +73,7 @@ class SelectableGroup {
 
             // Make the default button selected
             this.CurrentSelection.push(this.DefaultSelection);
-            this.DefaultSelection.BorderSizePixel = 2;
+            this.DefaultSelection.BorderSizePixel = this.Config.borderSize;
         }
     }
 
