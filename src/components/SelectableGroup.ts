@@ -238,7 +238,7 @@ class SelectableGroup {
     }
 
     /**
-     * Selects all the buttons when {@link Config.isSingleOnly} is false.
+     * Selects all the buttons when Config.isSingleOnly is false.
      * @returns void
      */
     SelectAll(): void {
