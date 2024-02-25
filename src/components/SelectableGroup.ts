@@ -235,6 +235,7 @@ class SelectableGroup {
         // Remove connections for this button
         this.removeButtonConnections(button);
         this.SelectionGroup.remove(btnGroupIndex);
+        button.BorderSizePixel = 0;
     }
 
     /**
