@@ -1,6 +1,6 @@
 {
   "name": "@rbxts/uipresets",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "",
   "main": "out/init.lua",
   "scripts": {
