@@ -179,10 +179,11 @@ class SelectableGroup {
                     // Otherwise remove the previous selection and select this button
                     else {
                         const prevSelection: Button = this.CurrentSelection[0];
-
-                        // Unselect the current button and select this button
-                        prevSelection.BorderSizePixel = 0;
-                        this.CurrentSelection.remove(0);
+                        if (prevSelection) {
+                            // Unselect the current button and select this button
+                            prevSelection.BorderSizePixel = 0;
+                            this.CurrentSelection.remove(0);
+                        }
 
                         this.CurrentSelection.push(button);
                         button.BorderSizePixel = borderSize;
