@@ -57,7 +57,7 @@ class ContextItem {
             // If there is already a connection then we are already active
             if (this.isActive || this._connection) return;
 
-            this._connection = this.btn.MouseButton1Click.Connect(() => this._action());
+            if (!this._connection) this.btn.MouseButton1Click.Connect(() => this._action());
             this.btn.Visible = true;
             this.isActive = true;
         } else {
