@@ -55,8 +55,8 @@ class TickSetting {
      * @param name The name of this TickSetting, it does not need to be unique
      * @param tickedByDefault Whether this setting is ticked by default or not
      */
-    constructor(type: TickSettingType,name: string,tickedByDefault: boolean = false) {
-        this._type = type;
+    constructor(_type: TickSettingType,name: string,tickedByDefault: boolean = false) {
+        this._type = _type;
         this.IsTicked = tickedByDefault;
 
         this.Name = name;
