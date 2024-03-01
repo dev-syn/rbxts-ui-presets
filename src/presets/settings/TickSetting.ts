@@ -14,6 +14,9 @@ const IMAGE_CHECK = "6031094667";
 
 const ContentProvider: ContentProvider = game.GetService("ContentProvider");
 
+/**
+ * This is a Setting preset that creates a label and a button which as of now can be a croos or a check image.
+ */
 class TickSetting {
 
     static {
@@ -51,7 +54,7 @@ class TickSetting {
 
     /**
      * 
-     * @param type The {@link TickSettingType} of this TickSetting
+     * @param _type The {@link TickSettingType} of this TickSetting
      * @param name The name of this TickSetting, it does not need to be unique
      * @param tickedByDefault Whether this setting is ticked by default or not
      */
