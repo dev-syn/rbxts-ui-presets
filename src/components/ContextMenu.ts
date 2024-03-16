@@ -1,4 +1,5 @@
 import { t } from '@rbxts/t';
+import { UIPresetsConfig } from '../UIPresetsConfig';
 
 const RunService: RunService = game.GetService("RunService");
 
@@ -108,13 +109,16 @@ class ContextMenu {
     private static _previousMenu?: ContextMenu = undefined;
 
     static {
-        this.contextMenuSG.Name = "ContextMenuSG";
-        this.contextMenuSG.DisplayOrder = 10000;
+        this.contextMenuSG.Name = "UIPresets_ContextMenu";
+        this.contextMenuSG.DisplayOrder = UIPresetsConfig.HighestDisplayOrder + 1;
         this.contextMenuSG.ResetOnSpawn = false;
         this.contextMenuSG.Parent = game.GetService("Players").LocalPlayer.WaitForChild("PlayerGui");
 
         this.textFitLabel.Position = new UDim2(2,0,2,0);
         this.textFitLabel.Parent = this.contextMenuSG;
+
+        // When the HighestDisplayOrder is changed update the ContextMenuSG DisplayOrder
+        UIPresetsConfig.OnDisplayOrderChanged.Connect((newOrder: number) => this.contextMenuSG.DisplayOrder = newOrder + 1);
     }
     /** The button element that triggers this ContextMenu */
     triggerElement: Button;
