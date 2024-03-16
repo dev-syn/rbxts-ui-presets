@@ -17,6 +17,11 @@
   resolved "https://registry.yarnpkg.com/@rbxts/compiler-types/-/compiler-types-2.2.0-types.0.tgz#cba7ff0cde0fa9ac18abb4251452814232d67a1e"
   integrity sha512-ycsIGfp49MypbRi4eEPCXTjbb2iLKL1/2GjRrFLuLJL74fCfVtbAXIo2LiZhPrgqIiBLomb4JN5Rcqv4304bzw==
 
+"@rbxts/services@^1.5.4":
+  version "1.5.4"
+  resolved "https://registry.yarnpkg.com/@rbxts/services/-/services-1.5.4.tgz#aac20d9ca833475e7dfc8856680b6e494e5e19c4"
+  integrity sha512-Klh+gRIT8zy3xRTX1YD6FZ9nAMzkzPLTHmciigt59PEF7PJXo31CF0IU0RegQ7VSMrz1iOnXwxbIwy3htcMfOA==
+
 "@rbxts/t@^3.1.1":
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@rbxts/t/-/t-3.1.1.tgz#713e48693a9a2f15908b9f80e42af04d9c385e74"
