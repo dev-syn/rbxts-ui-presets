@@ -6,8 +6,8 @@ import { SettingsCreator } from 'components/SettingsCreator';
 import { ToolTip } from 'components/ToolTip';
 
 type ComponentsMap = {
-    BoundCheck: BoundCheck,
     SettingsCreator: SettingsCreator,
+    BoundCheck: BoundCheck,
     ContextMenu: ContextMenu,
     Navbar: Navbar<any,any>,
     SelectableGroup: SelectableGroup,
