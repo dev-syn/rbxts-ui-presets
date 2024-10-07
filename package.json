@@ -5,8 +5,7 @@
   "main": "out/init.lua",
   "scripts": {
     "prepublishOnly": "npm run build",
-    "polish": "npx rimraf ./out/types",
-    "build": "rbxtsc && npm run polish"
+    "build": "rbxtsc"
   },
   "keywords": [
     "roblox-ts",
