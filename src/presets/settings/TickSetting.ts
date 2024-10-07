@@ -1,3 +1,6 @@
+import { PresetsData } from 'PresetsData';
+import type { Presets } from 'types/presets';
+
 /**
  * The TickSetting type that this setting will contain either a Check for a checkmark or a cross as a mark.
  * @enum
@@ -17,7 +20,10 @@ const ContentProvider: ContentProvider = game.GetService("ContentProvider");
 /**
  * This is a Setting preset that creates a label and a button which as of now can be a croos or a check image.
  */
-class TickSetting {
+class TickSetting extends PresetsData {
+
+    /** {@inheritDoc Preset} */
+    Type = "TickSetting" as Presets;
 
     static {
         // Preload these image ids
@@ -59,14 +65,16 @@ class TickSetting {
      * @param tickedByDefault Whether this setting is ticked by default or not
      */
     constructor(_type: TickSettingType,name: string,tickedByDefault: boolean = false) {
+        const frame: Frame = new Instance("Frame");
+        frame.Name = `TickSetting-${name}`;
+        frame.Size = new UDim2(1,0,0.1,0);
+
+        super(frame);
+
         this._type = _type;
         this.IsTicked = tickedByDefault;
 
         this.Name = name;
-
-        const frame: Frame = new Instance("Frame");
-        frame.Name = `TickSetting-${name}`;
-        frame.Size = new UDim2(1,0,0.1,0);
 
         const label: TextLabel = new Instance("TextLabel");
         label.Name = `Label-${name}`;
@@ -93,9 +101,9 @@ class TickSetting {
         aspectRatio.AspectRatio = 1;
         aspectRatio.Parent = btn;
 
+        this.Frame = frame;
         this.Label = label;
         this.TickBtn = btn;
-        this.Frame = frame;
 
         this._tickBtnConnection = btn.MouseButton1Click.Connect(() => {
             const isTicked: boolean = !this.IsTicked;
