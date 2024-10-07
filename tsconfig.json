@@ -14,14 +14,17 @@
 		"forceConsistentCasingInFileNames": true,
 		"moduleDetection": "force",
 		"strict": true,
+		"stripInternal": true,
 		"target": "ESNext",
 		"typeRoots": ["node_modules/@rbxts"],
+		"declaration": true,
 
 		// configurable
 		"rootDir": "src",
 		"outDir": "out",
+		"baseUrl": "src",
 		"incremental": true,
-		"tsBuildInfoFile": "out/tsconfig.tsbuildinfo",
-		"declaration": true
-	}
+		"tsBuildInfoFile": "out/tsconfig.tsbuildinfo"
+	},
+	"exclude": [ "out/**/*","src/types/**/*" ]
 }
