@@ -48,20 +48,15 @@ abstract class PresetsData<A extends PresetsDataAttributes = PresetsDataAttribut
      */
     private static _storedPresetsData: Map<string,PresetsData> = new Map();
 
+    /** The owning GuiObject of this object. */
+    declare Owner: GuiObject;
+
     /**
      * The PresetsData's internal representation of the Instance attributes.
      * Note: The owning Instance is the authoritarian of the attributes and ANY attributes on the Instance
      * that is known within these entries, when changed on the Instance, will be reflected to this objects entry. 
      */
     Attributes: A;
-    
-    /**
-     * This is the owning Instance of this PresetsData object.
-     * This should never be changed and only read internally.
-     * @readonly
-     * @protected
-     */
-    protected _owner: Instance;
 
     /**
      * The map of attributes that when changed the handler functions will be called
@@ -74,8 +69,8 @@ abstract class PresetsData<A extends PresetsDataAttributes = PresetsDataAttribut
      * Constructs a new PresetsData object.
      * @param owner - The Instance that will own this PresetsData
      */
-    constructor(owner: Instance) {
-        super();
+    constructor(owner: GuiObject) {
+        super(owner);
         let uuid: string = HttpService.GenerateGUID(false);
 
         if (PresetsData._storedPresetsData.has(uuid))
@@ -83,11 +78,11 @@ abstract class PresetsData<A extends PresetsDataAttributes = PresetsDataAttribut
         this.Attributes = generateDefaultAttributes() as A;
         this.Attributes.PresetUUID = uuid;
 
-        this._owner = owner;
+        this.Owner = owner;
 
         // When the attributes are changed update the internal attributes
-        this._owner.AttributeChanged.Connect((attr) => {
-            const currentValue: AttributeValue | undefined = this._owner.GetAttribute(attr);
+        this.Owner.AttributeChanged.Connect((attr) => {
+            const currentValue: AttributeValue | undefined = this.Owner.GetAttribute(attr);
             if (this.Attributes[attr] !== undefined)
                 (this.Attributes as any)[attr] = currentValue;
 
@@ -108,12 +103,12 @@ abstract class PresetsData<A extends PresetsDataAttributes = PresetsDataAttribut
      */
     SetAttribute(key: string, value: AttributeValue | undefined): void {
         if (this.Attributes[key]) {
-            const attr: AttributeValue | undefined = this._owner.GetAttribute(key);
+            const attr: AttributeValue | undefined = this.Owner.GetAttribute(key);
 
             // If the attribute doesn't exist and the value is undefined or null, don't create the attribute.
             if (!attr) return;
 
-            this._owner.SetAttribute(key,value);
+            this.Owner.SetAttribute(key,value);
         }
     }
 
@@ -122,8 +117,8 @@ abstract class PresetsData<A extends PresetsDataAttributes = PresetsDataAttribut
         PresetsData._storedPresetsData.delete(this.Attributes.PresetUUID);
         this._attachedHandlers.clear();
         this._attachedHandlers = undefined!;
-        this._owner.Destroy();
-        this._owner = undefined!;
+        this.Owner.Destroy();
+        super.Destroy();
     }
 
     /**
@@ -160,8 +155,8 @@ abstract class PresetsData<A extends PresetsDataAttributes = PresetsDataAttribut
      */
     protected InitAttributes() {
         for (const [key,value] of Object.entries(this.Attributes) as [keyof A, AttributeValue][]) {
-            const attr: AttributeValue | undefined = this._owner.GetAttribute(key as string);
-            if (attr === undefined) this._owner.SetAttribute(key as string,value);
+            const attr: AttributeValue | undefined = this.Owner.GetAttribute(key as string);
+            if (attr === undefined) this.Owner.SetAttribute(key as string,value);
             // Update the internal attribute value from the attribute
             else (this.Attributes[key] as any) = attr;
         }
