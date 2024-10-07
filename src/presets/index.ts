@@ -12,6 +12,11 @@ abstract class Preset<T extends GuiObject = GuiObject> {
     constructor(owner?: T | undefined) {
         this.Owner = owner;
     }
+
+    /** Destroys the Preset cleaning up used references. */
+    Destroy() {
+        this.Owner = undefined;
+    }
 }
 
 export = Preset;
