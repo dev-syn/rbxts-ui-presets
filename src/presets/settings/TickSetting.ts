@@ -22,13 +22,18 @@ const ContentProvider: ContentProvider = game.GetService("ContentProvider");
  */
 class TickSetting extends PresetsData {
 
-    /** {@inheritDoc Preset} */
-    Type = "TickSetting" as Presets;
-
     static {
         // Preload these image ids
         Promise.defer(() => ContentProvider.PreloadAsync([IMAGE_CROSS,IMAGE_CHECK]));
     }
+
+    /** {@inheritDoc Preset.Type} */
+    Type = "TickSetting" as Presets;
+
+    /**
+     * The TickSetting owner which is the Frame that holds the UI elements.
+     */
+    declare Owner: Frame;
 
     /** The name of this setting. */
     Name: string;

@@ -10,7 +10,7 @@ class Navbar<
     /** The Frame or ScrollingFrame that is the Navbar. */
     T extends Frame | ScrollingFrame,
     /** A map that stores the Navigation button to a Navigation Frame. */
-    NavigationFrames extends Map<Button,Frame | ScrollingFrame>> extends Component
+    NavigationFrames extends Map<Button,Frame | ScrollingFrame>> extends Component<T>
 {
     /** {@inheritDoc Component} */
     Type = "Navbar" as Components;    
@@ -19,7 +19,7 @@ class Navbar<
      * The NavBar Instance that contains the navigation buttons normally with a UIListLayout but not required.
      * @typeParam T - The Frame | ScrollingFrame that contains the nav buttons
      */
-    NavBarUI: T
+    declare Owner: T
 
     /**
      * The current frame that was navigated to.
@@ -37,10 +37,9 @@ class Navbar<
      */
     MainBtn?: TextButton;
     
-    /** Creates a new NavbarController. */
-    constructor(navBar: T,navigationableFrames: NavigationFrames,mainBtn?: TextButton) {
-        super();
-        this.NavBarUI = navBar;
+    /** Creates a new Navbar controller component. */
+    constructor(owner: T,navigationableFrames: NavigationFrames,mainBtn?: TextButton) {
+        super(owner);
         this.NavigationableFrames = navigationableFrames;
         this.MainBtn = mainBtn;
     }
@@ -50,7 +49,7 @@ class Navbar<
      * @param uiObjects - An array of GuiObjects to be shown. Any GuiObject in the Navbar that is not included will be hidden.
      */
     ShowButtons(uiObjects: Button[]) {
-        for (const child of this.NavBarUI.GetChildren()) {
+        for (const child of this.Owner.GetChildren()) {
             if (child.IsA("TextButton") || child.IsA("ImageButton")) {
                 const uiObject = child as Button;
                 uiObject.Visible = uiObject !== this.MainBtn ? uiObjects.includes(uiObject) : true;
@@ -65,7 +64,7 @@ class Navbar<
      * @param uiObjects - An array of GuiObjects to be hidden.
      */
     HideButtons(uiObjects: Button[]) {
-        for (const child of this.NavBarUI.GetChildren()) {
+        for (const child of this.Owner.GetChildren()) {
             if (child.IsA("TextButton") || child.IsA("ImageButton")) {
                 const uiObject = child as Button;
                 if (uiObjects.includes(uiObject)) {
@@ -83,7 +82,7 @@ class Navbar<
      * NOTICE: If the Navbar has a MainBtn, the MainBtn cannot be hidden.
      */
     HideAllButtons() {
-        for (const child of this.NavBarUI.GetChildren()) {
+        for (const child of this.Owner.GetChildren()) {
             if (child.IsA("GuiObject")) {
                 const uiObject = child as GuiObject;
                 if (this.MainBtn && this.MainBtn === uiObject) continue;

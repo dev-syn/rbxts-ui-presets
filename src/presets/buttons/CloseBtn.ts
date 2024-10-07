@@ -64,6 +64,8 @@ class CloseBtn extends PresetsData<CloseBtnAttributes> {
 
     /** {@inheritDoc Preset} */
     Type = "CloseBtn" as Presets;
+    /** {@inheritDoc Preset} */
+    declare Owner: Inst_CloseBtn;
     
     /**
      * {@inheritDoc PresetsData._owner}

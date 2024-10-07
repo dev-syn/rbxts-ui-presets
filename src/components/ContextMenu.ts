@@ -12,9 +12,7 @@ type Callback = () => void;
 /**
  * ContextItem is the makeup of each item available in the ContextMenu.
  */
-class ContextItem extends Component {
-    /** {@inheritDoc Component} */
-    Type = "ContextItem" as Components;
+class ContextItem {
     
     /** The name of this ContextItem. */
     Name: string;
@@ -40,7 +38,6 @@ class ContextItem extends Component {
      * @param action - The action of this ContextItem
      */
     constructor(Name: string,action: Callback) {
-        super();
         this.Name = Name;
         this._action = action;
 
@@ -93,7 +90,7 @@ class ContextItem extends Component {
 enum TextSizingMode {
     /** This sizing mode goes through all the context item texts and finds the lowest text size where all items would fit. This mode has a built-in fixed padding on those text sizes.*/
     MinimumCommon,
-    /** This mode uses the @see {@link ContextMenu.textSizeScaler} property which is a scale modifier for the triggerElement text size. */
+    /** This mode uses the @see {@link ContextMenu.textSizeScaler} property which is a scale modifier for the Owner text size. */
     Scaled
 }
 
@@ -102,11 +99,11 @@ enum TextSizingMode {
  * These are the options that can be passed to ContextMenu to change default ContextMenu behavior.
  */
 interface MenuOptions {
-    /** textSizingMode only affects TextButton triggerElements. */
+    /** textSizingMode only affects TextButton Owners. */
     textSizingMode: TextSizingMode;
 }
 
-class ContextMenu {
+class ContextMenu extends Component<Button> {
 
     static contextMenuSG: ScreenGui = new Instance("ScreenGui");
     static textFitLabel: TextLabel = new Instance("TextLabel");
@@ -126,16 +123,19 @@ class ContextMenu {
         // When the HighestDisplayOrder is changed update the ContextMenuSG DisplayOrder
         UIPresetsConfig.OnDisplayOrderChanged.Connect((newOrder: number) => this.contextMenuSG.DisplayOrder = newOrder + 1);
     }
-    /** The button element that triggers this ContextMenu */
-    triggerElement: Button;
+
+    /** {@inheritDoc Component} */
+    Type = "ContextMenu" as Components;
+    /** {@inheritDoc Component} */
+    declare Owner: Button;
 
     /** The ContextMenu background Frame Instance. */
     menuBG: Frame = new Instance("Frame");
 
-    /** A Vector2 which contains the scale modifier of the @see {@link ContextMenu.triggerElement} */
+    /** A Vector2 which contains the scale modifier of the @see {@link ContextMenu.Owner} */
     itemSize: Vector2 = new Vector2(1,1);
 
-    /** A scaler modifier number that will affect the @see {@link ContextMenu.triggerElement.TextSize} \* @see {@link textSizeScaler} */
+    /** A scaler modifier number that will affect the @see {@link ContextMenu.Owner.TextSize} \* @see {@link textSizeScaler} */
     textSizeScaler: number = 1;
 
     options: MenuOptions = {
@@ -166,19 +166,20 @@ class ContextMenu {
 
     /**
      * Constructs a new ContextMenu object.
-     * @param triggerElement - The button element that triggers this ContextMenu.
+     * @param Owner - The button element that triggers this ContextMenu.
      * @param contexts - The ContextItems that belong to this ContextMenu. Note: This is more performant than calling @see {@link ContextMenu.AddContext} on each ContextItem.
      */
-    constructor(triggerElement: Button,contexts?: ContextItem[]) {
+    constructor(owner: Button,contexts?: ContextItem[]) {
         if (!(t.instanceIsA("TextButton") || t.instanceIsA("ImageButton"))) error("TriggerElement must be an instance of TextButton | ImageButton.");
 
-        this.menuBG.Name = `ContextMenu-${triggerElement.Name}`;
+        super(owner);
+        this.menuBG.Name = `ContextMenu-${this.Owner.Name}`;
         this.menuBG.BackgroundColor3 = Color3.fromRGB(64,64,64);
         this.menuBG.Visible = true;
 
         // When the trigger element is right clicked draw and display the context menu
         this._connections.push(
-            triggerElement.MouseButton2Click.Connect(() => {
+            this.Owner.MouseButton2Click.Connect(() => {
                 if (ContextMenu.onlySingleContext && ContextMenu._previousMenu && ContextMenu._previousMenu !== this)
                     ContextMenu._previousMenu.menuBG.Parent = undefined;
 
@@ -194,15 +195,12 @@ class ContextMenu {
         
         // When the trigger element's position is changed, redraw the context menu.
         this._connections.push(
-            triggerElement.GetPropertyChangedSignal("Position").Connect(() => this.Draw())
+            this.Owner.GetPropertyChangedSignal("Position").Connect(() => this.Draw())
         );
 
-        triggerElement.Destroying.Connect(() => this.Destroy());
-
-        this.triggerElement = triggerElement;
+        this.Owner.Destroying.Connect(() => this.Destroy());
         
         if (!contexts) return;
-
         contexts.forEach(item => this._contexts.push(item));
     }
 
@@ -236,25 +234,25 @@ class ContextMenu {
 
 
         // The absolute size of the trigger element
-        const absSizeY: number = this.triggerElement.AbsoluteSize.Y;
+        const absSizeY: number = this.Owner.AbsoluteSize.Y;
 
         // The absolute position of the trigger element
-        const absPosY: number = this.triggerElement.AbsolutePosition.Y;
+        const absPosY: number = this.Owner.AbsolutePosition.Y;
 
         // The minimum absolute size of each context item
         const itemAbsSizeY: number = math.ceil(this.itemSize.Y* absSizeY);
 
         // Get the used amount of space on the x axis in pixels of each context item
-        const itemAbsSizeX: number = math.ceil(this.itemSize.X * this.triggerElement.AbsoluteSize.X);
+        const itemAbsSizeX: number = math.ceil(this.itemSize.X * this.Owner.AbsoluteSize.X);
 
         // Calculate the absolute position of the element from the top
-        const yAnchor: number = this.triggerElement.AnchorPoint.Y;
+        const yAnchor: number = this.Owner.AnchorPoint.Y;
         
         // Calculate the top left absolute y position of the trigger element
         const topAbsPosY: number = math.ceil(absPosY - absSizeY * yAnchor);
 
         // Calculate the left absolute x position of the trigger element
-        const leftAbsPosX: number = this.triggerElement.AbsolutePosition.X - math.ceil(this.triggerElement.AbsoluteSize.X * this.triggerElement.AnchorPoint.X);
+        const leftAbsPosX: number = this.Owner.AbsolutePosition.X - math.ceil(this.Owner.AbsoluteSize.X * this.Owner.AnchorPoint.X);
 
 // #region ROWS_COLUMNS
 
@@ -294,7 +292,7 @@ class ContextMenu {
         this.menuBG.Position = new UDim2(
             0,
             isSizeOverHalfX ? leftAbsPosX - this.menuBG.AbsoluteSize.X
-            : rightAbsPosX + (this.triggerElement.AbsoluteSize.X - itemAbsSizeX),
+            : rightAbsPosX + (this.Owner.AbsoluteSize.X - itemAbsSizeX),
             0,
             isSizeOverHalfY ?
             (topAbsPosY + -(this.menuBG.AbsoluteSize.Y - math.ceil(( 1 / this.itemSize.Y) * itemAbsSizeY)))
@@ -402,7 +400,7 @@ class ContextMenu {
         this._connections = [];
 
         this.menuBG.Parent = undefined;
-        this.triggerElement = undefined!;
+        this.Owner = undefined!;
         if (ContextMenu._previousMenu === this) ContextMenu._previousMenu = undefined;
     }
 
@@ -411,19 +409,19 @@ class ContextMenu {
      * Internally calculates the CommonTextSize based on the absolute size of the trigger element and your size modifiers.
      */
     private updateTextSize() {
-        if (!this.triggerElement.IsA("TextButton")) return;
+        if (!this.Owner.IsA("TextButton")) return;
 
         if (this.options.textSizingMode === TextSizingMode.MinimumCommon) {
             // The minimum absolute size of each context item on the y axis
-            const itemAbsSizeY: number = math.ceil(this.itemSize.Y * this.triggerElement.AbsoluteSize.Y);
+            const itemAbsSizeY: number = math.ceil(this.itemSize.Y * this.Owner.AbsoluteSize.Y);
 
             // The minimum absolute size of each context item on the x axis
-            const itemAbsSizeX: number = math.ceil(this.itemSize.X * this.triggerElement.AbsoluteSize.X);
+            const itemAbsSizeX: number = math.ceil(this.itemSize.X * this.Owner.AbsoluteSize.X);
 
             this._itemTextSize = this.GetCommonTextSize(itemAbsSizeX,itemAbsSizeY);
         }
         else if (this.options.textSizingMode === TextSizingMode.Scaled)
-            this._itemTextSize = this.textSizeScaler * this.triggerElement.TextSize;
+            this._itemTextSize = this.textSizeScaler * this.Owner.TextSize;
     }
 }
 

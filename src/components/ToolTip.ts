@@ -33,6 +33,10 @@ class ToolTip extends Component {
 
     /** {@inheritDoc Component} */
     Type = "ToolTip" as Components;
+    /**
+     * The UI element that this {@link ToolTip} represents.
+     */
+    declare Owner: GuiObject;
 
     /**
      * The options that change the behavior of this ToolTip.
@@ -46,8 +50,6 @@ class ToolTip extends Component {
     Text: string;
     /** The size of the text that will be displayed. */
     TextSize: number = 18;
-    /** The UI element that this {@link ToolTip} represents. */
-    TargetElement: GuiObject;
 
     /**
      * The absolute size of the {@link ToolTip} TextLabel.
@@ -61,28 +63,27 @@ class ToolTip extends Component {
     private _tooltipLabel: TextLabel;
 
     /**
-     * The bounding check of the {@link ToolTip.TargetElement}.
+     * The bounding check of the {@link ToolTip.Owner}.
      * @private
      */
     private _boundCheck: BoundCheck;
 
-    constructor(text: string,targetElement: GuiObject) {
-        super();
+    constructor(Owner: GuiObject,text: string) {
+        super(Owner);
         this.Text = text;
-        this.TargetElement = targetElement;
         
         // Get the initial absolute size based on starting text
         this._updateTextBounds();
 
         const tl: TextLabel = new Instance("TextLabel");
-        tl.Name = `Tooltip-${this.TargetElement.Name}`;
+        tl.Name = `Tooltip-${this.Owner.Name}`;
         tl.Size = new UDim2(0,this._absSize.X,0,this._absSize.Y);
         tl.AnchorPoint = new Vector2(0.5,0.5);
         tl.Text = text;
         
         this._tooltipLabel = tl;
 
-        this._boundCheck = new BoundCheck(targetElement);
+        this._boundCheck = new BoundCheck(Owner);
         this._boundCheck.BoundEnter.Connect(() => {
             this.Draw();
         });
@@ -142,7 +143,7 @@ class ToolTip extends Component {
         this._boundCheck = undefined!;
         this._tooltipLabel.Destroy();
         this._tooltipLabel = undefined!;
-        this.TargetElement = undefined!;
+        this.Owner = undefined!;
     }
 
     private _updateTextBounds() {

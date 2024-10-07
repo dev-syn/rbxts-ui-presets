@@ -84,8 +84,10 @@ class BoundCheck extends Component {
         });
     }
 
-    /** {@inheritDoc Component} */
+    /** {@inheritDoc components/index} */
     Type = "BoundCheck" as Components;
+    /** {@inheritDoc Component} */
+    declare Owner: GuiObject;
 
     Options: BoundCheckOptions = {
         TopMostOnly: false,
@@ -98,9 +100,6 @@ class BoundCheck extends Component {
 
     /** This stores the data of the bounds you can access the corner coord abs' positions and the size of the bounds. */
     Bounds!: BoundsLayout;
-
-    /** The element that is used for the query bounds. */
-    TargetElement: GuiObject;
 
     /** A signal that is called when the bounds is entered. */
     BoundEnter: Signal<void> = new Signal();
@@ -118,15 +117,14 @@ class BoundCheck extends Component {
 
     /**
      * Constructs a new BoundCheck object.
-     * @param targetElement The element whos bounds will be queried
+     * @param owner The element whos bounds will be queried
      * @param activeOnStart Whether this BoundCheck should be active when this BoundCheck is created. Default(true)
      */
-    constructor(targetElement: GuiObject,activeOnStart: boolean = true) {
-        super();
-        this.TargetElement = targetElement;
+    constructor(owner: GuiObject,activeOnStart: boolean = true) {
+        super(owner);
         this.Active = activeOnStart;
 
-        this.TargetElement.Destroying.Once(() => this.Destroy());
+        this.Owner.Destroying.Once(() => this.Destroy());
         BoundCheck._boundChecks.set(this,true);
     }
 
@@ -139,12 +137,12 @@ class BoundCheck extends Component {
      * @internal
      */
     Query(): boolean {
-        if (!this.TargetElement) return false;
-        if (this.Options.ConsiderVisibility && !this.TargetElement.Visible) {
+        if (!this.Owner) return false;
+        if (this.Options.ConsiderVisibility && !this.Owner.Visible) {
             print("Not visible")
             return false;
         }
-        if (!this._ancestorSG) this._ancestorSG = this.TargetElement.FindFirstAncestorWhichIsA("ScreenGui");
+        if (!this._ancestorSG) this._ancestorSG = this.Owner.FindFirstAncestorWhichIsA("ScreenGui");
 
         const mousePos: Vector2 | undefined = UserInputService.GetMouseLocation();
         if (!mousePos) return false;
@@ -153,10 +151,10 @@ class BoundCheck extends Component {
             const uis: GuiObject[] = PlayerGui.GetGuiObjectsAtPosition(mousePos.X,mousePos.Y);
             if (uis.size() === 0) return false;
 
-            if (uis[0] !== this.TargetElement) return false;
+            if (uis[0] !== this.Owner) return false;
         }
 
-        const tElem: GuiObject = this.TargetElement;
+        const tElem: GuiObject = this.Owner;
 
         const absXSize: number = tElem.AbsoluteSize.X;
         const absYSize: number = tElem.AbsoluteSize.Y;
@@ -203,7 +201,7 @@ class BoundCheck extends Component {
         
     }
 
-    /** Destroys this {@link BoundCheck} removing references. You only really need to call this method when you want to delete the {@link BoundCheck} without destroying the {@link BoundCheck.TargetElement}. */
+    /** Destroys this {@link BoundCheck} removing references. You only really need to call this method when you want to delete the {@link BoundCheck} without destroying the {@link BoundCheck.Owner}. */
     Destroy() {
         this.Active = false;
         BoundCheck._boundChecks.delete(this);
@@ -218,7 +216,7 @@ class BoundCheck extends Component {
             this.BoundExit = undefined!;
         }
 
-        this.TargetElement = undefined!;
+        this.Owner = undefined!;
     }
 
 }
