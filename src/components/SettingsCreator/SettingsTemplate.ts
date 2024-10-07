@@ -1,0 +1,5 @@
+class SettingsTemplate {
+
+}
+
+export { SettingsTemplate };
