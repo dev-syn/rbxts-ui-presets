@@ -1,4 +1,5 @@
 {
+    "name": "UIPresets",
     "plugin": ["typedoc-material-theme"],
     "entryPointStrategy": "expand",
     "entryPoints": ["src/**/*"],
