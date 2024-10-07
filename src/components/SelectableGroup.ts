@@ -1,4 +1,6 @@
 import { Signal } from '@rbxts/beacon';
+import Component from 'components';
+import type { Components } from 'types/components';
 
 type Button = TextButton | ImageButton;
 
@@ -19,7 +21,10 @@ const rand: Random = new Random();
 /**
  * This class allows you to group TextButton/ImageButton buttons together and allow single or multiple selections between those buttons.
  */
-class SelectableGroup {
+class SelectableGroup extends Component {
+
+    /** {@inheritDoc Component} */
+    Type = "SelectableGroup" as Components;
 
     /** The buttons that belong to this SelectableGroup. */
     SelectionGroup: Button[];
@@ -61,6 +66,7 @@ class SelectableGroup {
      * @param group - An optional parameter to assign this SelectableGroup buttons
      */
 	constructor(group?: Button[]) {
+        super();
         this.SelectionGroup = [];
         if (group) group.forEach(btn => this.Add(btn));
 	}

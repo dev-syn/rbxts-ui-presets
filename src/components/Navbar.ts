@@ -1,3 +1,6 @@
+import Component from 'components';
+import type { Components } from 'types/components';
+
 type Button = TextButton | ImageButton;
 
 /**
@@ -7,8 +10,11 @@ class Navbar<
     /** The Frame or ScrollingFrame that is the Navbar. */
     T extends Frame | ScrollingFrame,
     /** A map that stores the Navigation button to a Navigation Frame. */
-    NavigationFrames extends Map<Button,Frame | ScrollingFrame>>
+    NavigationFrames extends Map<Button,Frame | ScrollingFrame>> extends Component
 {
+    /** {@inheritDoc Component} */
+    Type = "Navbar" as Components;    
+    
     /**
      * The NavBar Instance that contains the navigation buttons normally with a UIListLayout but not required.
      * @typeParam T - The Frame | ScrollingFrame that contains the nav buttons
@@ -33,6 +39,7 @@ class Navbar<
     
     /** Creates a new NavbarController. */
     constructor(navBar: T,navigationableFrames: NavigationFrames,mainBtn?: TextButton) {
+        super();
         this.NavBarUI = navBar;
         this.NavigationableFrames = navigationableFrames;
         this.MainBtn = mainBtn;

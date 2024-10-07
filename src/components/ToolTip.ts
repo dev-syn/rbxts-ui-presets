@@ -1,6 +1,8 @@
 import { t } from '@rbxts/t';
 import { UIPresetsConfig } from '../UIPresetsConfig';
 import { BoundCheck } from './BoundCheck';
+import Component from 'components';
+import type { Components } from 'types/components';
 
 const TextService: TextService = game.GetService('TextService');
 const UserInputService: UserInputService = game.GetService('UserInputService');
@@ -14,7 +16,7 @@ interface ToolTipOptions {
 /**
  * This is a component that will create a ToolTip near the target element.
  */
-class ToolTip {
+class ToolTip extends Component {
 
     private static _tooltipSG: ScreenGui = new Instance("ScreenGui");
 
@@ -28,6 +30,9 @@ class ToolTip {
         // When the HighestDisplayOrder is changed update the ContextMenuSG DisplayOrder
         UIPresetsConfig.OnDisplayOrderChanged.Connect((newOrder: number) => this._tooltipSG.DisplayOrder = newOrder + 1);
     }
+
+    /** {@inheritDoc Component} */
+    Type = "ToolTip" as Components;
 
     /**
      * The options that change the behavior of this ToolTip.
@@ -62,6 +67,7 @@ class ToolTip {
     private _boundCheck: BoundCheck;
 
     constructor(text: string,targetElement: GuiObject) {
+        super();
         this.Text = text;
         this.TargetElement = targetElement;
         

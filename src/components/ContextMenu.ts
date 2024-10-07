@@ -1,5 +1,7 @@
 import { t } from '@rbxts/t';
 import { UIPresetsConfig } from '../UIPresetsConfig';
+import Component from 'components';
+import type { Components } from 'types/components';
 
 const RunService: RunService = game.GetService("RunService");
 
@@ -10,17 +12,20 @@ type Callback = () => void;
 /**
  * ContextItem is the makeup of each item available in the ContextMenu.
  */
-class ContextItem {
+class ContextItem extends Component {
+    /** {@inheritDoc Component} */
+    Type = "ContextItem" as Components;
+    
     /** The name of this ContextItem. */
-    name: string;
-    /** The btn that triggers this items _action. */
-    btn: TextButton = new Instance("TextButton");
+    Name: string;
+    /** The Btn that triggers this items _action. */
+    Btn: TextButton = new Instance("TextButton");
     /** Tracks whether this ContextItem is active or not. */
     isActive: boolean = true;
 
     /**
      * @private
-     * The btn connection to trigger the action.
+     * The Btn connection to trigger the action.
      */
     private _connection?: RBXScriptConnection;
     /**
@@ -31,22 +36,23 @@ class ContextItem {
 
     /**
      * Constructs a new ContextItem object.
-     * @param name - The name of this ContextItem
+     * @param Name - The Name of this ContextItem
      * @param action - The action of this ContextItem
      */
-    constructor(name: string,action: Callback) {
-        this.name = name;
+    constructor(Name: string,action: Callback) {
+        super();
+        this.Name = Name;
         this._action = action;
 
-        this.btn.Name = `ContextItem-${this.name}`;
-        this.btn.BackgroundColor3 = Color3.fromRGB(64,64,64);
-        this.btn.TextColor3 = Color3.fromRGB(255,255,255);
-        this.btn.AutoButtonColor = true;
-        this.btn.Text = this.name;
-        this.btn.BorderMode = Enum.BorderMode.Middle;
+        this.Btn.Name = `ContextItem-${this.Name}`;
+        this.Btn.BackgroundColor3 = Color3.fromRGB(64,64,64);
+        this.Btn.TextColor3 = Color3.fromRGB(255,255,255);
+        this.Btn.AutoButtonColor = true;
+        this.Btn.Text = this.Name;
+        this.Btn.BorderMode = Enum.BorderMode.Middle;
 
-        this._connection = this.btn.MouseButton1Click.Connect(() => this._action());
-        this.btn.Visible = true;
+        this._connection = this.Btn.MouseButton1Click.Connect(() => this._action());
+        this.Btn.Visible = true;
     }
 
     /**
@@ -58,8 +64,8 @@ class ContextItem {
             // If there is already a connection then we are already active
             if (this.isActive || this._connection) return;
 
-            if (!this._connection) this.btn.MouseButton1Click.Connect(() => this._action());
-            this.btn.Visible = true;
+            if (!this._connection) this.Btn.MouseButton1Click.Connect(() => this._action());
+            this.Btn.Visible = true;
             this.isActive = true;
         } else {
             if (!this.isActive) return;
@@ -68,14 +74,14 @@ class ContextItem {
                 this._connection.Disconnect();
                 this._connection = undefined;
             }
-            this.btn.Visible = false;
+            this.Btn.Visible = false;
             this.isActive = false;
         }
     }
 
     /** Destroys this ContextItem. */
     Destroy(): void {
-        this.btn.Destroy();
+        this.Btn.Destroy();
         this._connection = undefined;
     }
 }
@@ -306,9 +312,9 @@ class ContextMenu {
                 // If out of items then break
                 if (!item) break;
                 
-                item.btn.Size = new UDim2(0,itemAbsSizeX,0,itemAbsSizeY);
-                item.btn.Position = lastPos.add(new UDim2(0,0,0,itemAbsSizeY));
-                lastPos = item.btn.Position;
+                item.Btn.Size = new UDim2(0,itemAbsSizeX,0,itemAbsSizeY);
+                item.Btn.Position = lastPos.add(new UDim2(0,0,0,itemAbsSizeY));
+                lastPos = item.Btn.Position;
                 itemIndex++;
             }
             lastPos = new UDim2(0,itemAbsSizeX * (columnIndex + 1),0,-itemAbsSizeY);
@@ -317,9 +323,9 @@ class ContextMenu {
 
         // Parent each context item button to the MenuBG
         activeContexts.forEach(c => {
-            if (c.btn.IsA("TextButton")) c.btn.TextSize = this._itemTextSize!;
+            if (c.Btn.IsA("TextButton")) c.Btn.TextSize = this._itemTextSize!;
             
-            c.btn.Parent = this.menuBG;
+            c.Btn.Parent = this.menuBG;
         });
 
         ContextMenu._previousMenu = this;
@@ -334,9 +340,9 @@ class ContextMenu {
         tl.Size = new UDim2(0,absX,0,absY);
 
         for (const item of this.GetActiveContexts()) {
-            if (!item.btn.IsA("TextButton")) continue;
+            if (!item.Btn.IsA("TextButton")) continue;
 
-            tl.Text = item.name;
+            tl.Text = item.Name;
     
             while(!tl.TextFits) {
                 if (commonSize === 2) break;

@@ -1,5 +1,7 @@
 import { Signal } from '@rbxts/beacon';
 import { Players, RunService, UserInputService } from '@rbxts/services';
+import Component from 'components';
+import type { Components } from 'types/components';
 
 const PlayerGui: PlayerGui = Players.LocalPlayer.WaitForChild("PlayerGui") as PlayerGui;
 
@@ -67,7 +69,7 @@ class BoundsLayout {
 /**
  * This is a UIPresets component that checks if the mouse is within a UI element bounds.
  */
-class BoundCheck {
+class BoundCheck extends Component {
     private static _boundChecks: Map<BoundCheck,true | undefined> = new Map();
     
     static {
@@ -81,6 +83,9 @@ class BoundCheck {
 
         });
     }
+
+    /** {@inheritDoc Component} */
+    Type = "BoundCheck" as Components;
 
     Options: BoundCheckOptions = {
         TopMostOnly: false,
@@ -109,7 +114,6 @@ class BoundCheck {
      */
     private _withinBounds: boolean = false;
 
-    private _elementConnections: RBXScriptConnection[] = [];
     private _ancestorSG: ScreenGui | undefined;
 
     /**
@@ -118,6 +122,7 @@ class BoundCheck {
      * @param activeOnStart Whether this BoundCheck should be active when this BoundCheck is created. Default(true)
      */
     constructor(targetElement: GuiObject,activeOnStart: boolean = true) {
+        super();
         this.TargetElement = targetElement;
         this.Active = activeOnStart;
 
