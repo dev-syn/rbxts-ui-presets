@@ -64,17 +64,12 @@ class CloseBtn extends PresetsData<CloseBtnAttributes> {
 
     /** {@inheritDoc Preset} */
     Type = "CloseBtn" as Presets;
-    /** {@inheritDoc Preset} */
+    /** The owner which is the CloseBtn roblox Instance. */
     declare Owner: Inst_CloseBtn;
-    
-    /**
-     * {@inheritDoc PresetsData._owner}
-     * @readonly
-     * @protected
-     */
-    protected declare _owner: Inst_CloseBtn;
+    /** The attributes that belong to CloseBtn. */
     declare Attributes: CloseBtnAttributes;
 
+    /** A reference to the Frame that is for the CloseBtn tint. */
     private _tintFrame: Frame;
 
     /**
