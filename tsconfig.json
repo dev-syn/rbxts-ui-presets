@@ -16,7 +16,7 @@
 		"strict": true,
 		"stripInternal": true,
 		"target": "ESNext",
-		"typeRoots": ["node_modules/@rbxts"],
+		"typeRoots": ["node_modules/@rbxts","./types"],
 		"declaration": true,
 
 		// configurable
@@ -26,5 +26,5 @@
 		"incremental": true,
 		"tsBuildInfoFile": "out/tsconfig.tsbuildinfo"
 	},
-	"exclude": [ "out/**/*","src/types/**/*" ]
+	"exclude": [ "out/**/*" ]
 }
