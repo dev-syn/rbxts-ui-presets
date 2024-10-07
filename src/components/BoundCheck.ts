@@ -75,7 +75,7 @@ class BoundCheck extends Component {
     static {
         RunService.BindToRenderStep("UIPresets_BoundCheck",Enum.RenderPriority.Input.Value + 5,() => {
 
-            for (const [boundCheck,_] of pairs(this._boundChecks)) {
+            for (const [boundCheck,_] of this._boundChecks) {
                 if (!boundCheck.Active) continue;
 
                 boundCheck.Query();
@@ -113,7 +113,10 @@ class BoundCheck extends Component {
      */
     private _withinBounds: boolean = false;
 
+    /** The ancestor ScreenGui which is used for internal positioning and sizing checks. */
     private _ancestorSG: ScreenGui | undefined;
+
+    private _destroyingConnection?: RBXScriptConnection;
 
     /**
      * Constructs a new BoundCheck object.
@@ -124,7 +127,7 @@ class BoundCheck extends Component {
         super(owner);
         this.Active = activeOnStart;
 
-        this.Owner.Destroying.Once(() => this.Destroy());
+        this._destroyingConnection = this.Owner.Destroying.Once(() => this.Destroy());
         BoundCheck._boundChecks.set(this,true);
     }
 
@@ -203,8 +206,14 @@ class BoundCheck extends Component {
 
     /** Destroys this {@link BoundCheck} removing references. You only really need to call this method when you want to delete the {@link BoundCheck} without destroying the {@link BoundCheck.Owner}. */
     Destroy() {
+        super.Destroy();
         this.Active = false;
         BoundCheck._boundChecks.delete(this);
+
+        if (this._destroyingConnection) {
+            this._destroyingConnection.Disconnect();
+            this._destroyingConnection = undefined;
+        }
 
         // Clean up signal events
         if (this.BoundEnter) {
@@ -215,8 +224,6 @@ class BoundCheck extends Component {
             this.BoundExit.Destroy();
             this.BoundExit = undefined!;
         }
-
-        this.Owner = undefined!;
     }
 
 }

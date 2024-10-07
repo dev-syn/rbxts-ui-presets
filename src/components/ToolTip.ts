@@ -16,7 +16,7 @@ interface ToolTipOptions {
 /**
  * This is a component that will create a ToolTip near the target element.
  */
-class ToolTip extends Component {
+class ToolTip extends Component<TextLabel> {
 
     private static _tooltipSG: ScreenGui = new Instance("ScreenGui");
 
@@ -36,7 +36,7 @@ class ToolTip extends Component {
     /**
      * The UI element that this {@link ToolTip} represents.
      */
-    declare Owner: GuiObject;
+    declare Owner: TextLabel;
 
     /**
      * The options that change the behavior of this ToolTip.
@@ -56,11 +56,6 @@ class ToolTip extends Component {
      * @private
      */
     private _absSize!: Vector2;
-    /**
-     * The TextLabel of the {@link ToolTip}.
-     * @private
-     */
-    private _tooltipLabel: TextLabel;
 
     /**
      * The bounding check of the {@link ToolTip.Owner}.
@@ -68,36 +63,43 @@ class ToolTip extends Component {
      */
     private _boundCheck: BoundCheck;
 
-    constructor(Owner: GuiObject,text: string) {
-        super(Owner);
-        this.Text = text;
-        
+    constructor(name: string,text: string) {
+        const tl: TextLabel = new Instance("TextLabel");
+        tl.Name = `Tooltip-${name}`;
+        super(tl);
+
         // Get the initial absolute size based on starting text
+        this.Text = text;
         this._updateTextBounds();
 
-        const tl: TextLabel = new Instance("TextLabel");
-        tl.Name = `Tooltip-${this.Owner.Name}`;
         tl.Size = new UDim2(0,this._absSize.X,0,this._absSize.Y);
         tl.AnchorPoint = new Vector2(0.5,0.5);
         tl.Text = text;
         
-        this._tooltipLabel = tl;
-
-        this._boundCheck = new BoundCheck(Owner);
+        this._boundCheck = new BoundCheck(tl);
         this._boundCheck.BoundEnter.Connect(() => {
             this.Draw();
         });
         
         this._boundCheck.BoundExit.Connect(() => {
-            this._tooltipLabel.Parent = undefined
+            this.Owner.Parent = undefined
         });
+    }
+
+    /** Destroys this {@link ToolTip} object removing references and connections. */
+    Destroy() {
+        this._boundCheck.Destroy();
+        this._boundCheck = undefined!;
+
+        this.Owner.Destroy();
+        super.Destroy();
     }
 
     /** Sets the ToolTip text and updates the ToolTip absolute size. */
     SetText(text: string) {
         this.Text = text;
         this._updateTextBounds();
-        this._tooltipLabel.Text = text;
+        this.Owner.Text = text;
     }
 
     /**
@@ -106,7 +108,7 @@ class ToolTip extends Component {
      */
     SetPosition(pos: Vector2 = UserInputService.GetMouseLocation()): void {
 
-        const label: TextLabel = this._tooltipLabel;
+        const label: TextLabel = this.Owner;
         
         const halfAbsSize: Vector2 = new Vector2(label.AbsoluteSize.X / 2,label.AbsoluteSize.Y / 2);
 
@@ -131,19 +133,10 @@ class ToolTip extends Component {
 
     Draw() {
         // Size the ToolTip element before positioning
-        this._tooltipLabel.Size = new UDim2(0,this._absSize.X,0,this._absSize.Y);
+        this.Owner.Size = new UDim2(0,this._absSize.X,0,this._absSize.Y);
         // Update the Position
         this.SetPosition();
-        this._tooltipLabel.Parent = ToolTip._tooltipSG;
-    }
-
-    /** Destroys this {@link ToolTip} object removing references and connections. */
-    Destroy() {
-        this._boundCheck.Destroy();
-        this._boundCheck = undefined!;
-        this._tooltipLabel.Destroy();
-        this._tooltipLabel = undefined!;
-        this.Owner = undefined!;
+        this.Owner.Parent = ToolTip._tooltipSG;
     }
 
     private _updateTextBounds() {

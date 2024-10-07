@@ -107,8 +107,11 @@ class ContextMenu extends Component<Button> {
 
     static contextMenuSG: ScreenGui = new Instance("ScreenGui");
     static textFitLabel: TextLabel = new Instance("TextLabel");
+    
+    /** Whether only one context menu can be showed at a time. */
     static onlySingleContext: boolean = true;
 
+    /** The previous or current ContentMenu that is showed on screen. */
     private static _previousMenu?: ContextMenu = undefined;
 
     static {
@@ -198,7 +201,7 @@ class ContextMenu extends Component<Button> {
             this.Owner.GetPropertyChangedSignal("Position").Connect(() => this.Draw())
         );
 
-        this.Owner.Destroying.Connect(() => this.Destroy());
+        this._connections.push(this.Owner.Destroying.Once(() => this.Destroy()));
         
         if (!contexts) return;
         contexts.forEach(item => this._contexts.push(item));
@@ -208,6 +211,23 @@ class ContextMenu extends Component<Button> {
     Init() {
         // Updates the text size of these context items that are TextButton elements
         this.updateTextSize();
+    }
+
+    /**
+     * Destroys this ContextMenu object.
+     */
+    Destroy() {
+        super.Destroy();
+        // Destroy each ContextItem
+        this._contexts.forEach(item => item.Destroy());
+
+        // Disconnect each connection of this ContextMenu
+        this._connections.forEach(conn => conn.Disconnect());
+        this._connections = [];
+
+        this.menuBG.Destroy();
+        this.menuBG.Parent = undefined;
+        if (ContextMenu._previousMenu === this) ContextMenu._previousMenu = undefined;
     }
 
     /**
@@ -385,23 +405,6 @@ class ContextMenu extends Component<Button> {
     Clear() {
         this._contexts.forEach(c => c.Destroy());
         this._contexts.clear();
-    }
-
-    /**
-     * Destroys this ContextMenu object.
-     */
-    Destroy() {
-
-        // Destroy each ContextItem
-        this._contexts.forEach(item => item.Destroy());
-
-        // Disconnect each connection of this ContextMenu
-        this._connections.forEach(conn => conn.Disconnect());
-        this._connections = [];
-
-        this.menuBG.Parent = undefined;
-        this.Owner = undefined!;
-        if (ContextMenu._previousMenu === this) ContextMenu._previousMenu = undefined;
     }
 
     /**

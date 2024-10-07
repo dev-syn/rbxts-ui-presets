@@ -12,6 +12,11 @@ abstract class Component<T extends GuiObject = GuiObject> {
     constructor(owner?: T | undefined) {
         this.Owner = owner;
     }
+
+    /** Destroys the Component cleaning up used references. */
+    Destroy() {
+        this.Owner = undefined;
+    }
 }
 
 export = Component;

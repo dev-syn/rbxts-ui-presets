@@ -1,4 +1,5 @@
 import { Signal } from '@rbxts/beacon';
+import Object from '@rbxts/object-utils';
 import Component from 'components';
 import type { Components } from 'types/components';
 
@@ -81,6 +82,27 @@ class SelectableGroup extends Component {
             this.CurrentSelection.push(this.DefaultSelection);
             this.DefaultSelection.BorderSizePixel = this.Config.borderSize;
         }
+    }
+
+    /**
+     * Destroys this SelectableGroup clearing all references to the buttons.
+     */
+    Destroy() {
+        super.Destroy();
+        // Clear all the button references to each button in this group
+        for (const [btn,connections] of Object.entries(this.selectableConnections)) {
+            connections.forEach(conn => conn.Disconnect());
+        }
+        this.selectableConnections.clear();
+
+        this.Config.requireSelection = false;
+        // Reset all of the buttons selection state to none.
+        this.UnselectAll();
+        
+        // Clear all table references
+        this.CurrentSelection.clear();
+        this.SelectionGroup.clear();
+        this.DefaultSelection = undefined;
     }
 
     /**
@@ -299,18 +321,6 @@ class SelectableGroup extends Component {
      * @returns - A boolean which is true if it is selected otherwise false
      */
     IsSelected(btn: Button): boolean { return this.CurrentSelection.includes(btn); }
-
-    /**
-     * Destroys this SelectableGroup clearing all references to the buttons.
-     */
-    Destroy() {
-        // Clear all the button references to each button in this group
-        this.SelectionGroup.forEach(button => this.removeButtonConnections(button));
-
-        // Clear all table references
-        this.CurrentSelection.clear();
-        this.SelectionGroup.clear();
-    }
 
     /** Removes the RBXScriptConnection connections from the given button. */
     private removeButtonConnections(button: Button) {
