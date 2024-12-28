@@ -1,4 +1,4 @@
-import { PresetsData } from 'PresetsData';
+import { Preset } from 'presets';
 import type { Presets } from 'types/presets';
 
 /**
@@ -20,7 +20,7 @@ const ContentProvider: ContentProvider = game.GetService("ContentProvider");
 /**
  * This is a Setting preset that creates a label and a button which as of now can be a croos or a check image.
  */
-class TickSetting extends PresetsData {
+class TickSetting extends Preset<> {
 
     static {
         // Preload these image ids
@@ -118,6 +118,7 @@ class TickSetting extends PresetsData {
     }
 
     Destroy() {
+        super.Destroy();
         this.Label = undefined!;
         this.TickBtn = undefined!;
         this.Frame = undefined!;

@@ -1,5 +1,6 @@
 import Object from '@rbxts/object-utils';
-import { EPresetDataAttributes, PresetsData, PresetsDataAttributes } from 'PresetsData';
+import { Preset, PresetsDataAttributes, PresetsSerialized } from 'presets';
+import { ConditionalReturn } from 'plugin/serialization/Serializer';
 import type { Presets } from 'types/presets';
 
 type Inst_CloseBtn = ImageButton & {
@@ -60,7 +61,7 @@ function createCloseButton(): Inst_CloseBtn {
  * 'Red' tint, this can be overridden inside {@link PresetsData.Attributes}, see {@link CloseBtnAttributes}
  * for this presets attributes.
  */
-class CloseBtn extends PresetsData<CloseBtnAttributes> {
+class CloseBtn extends Preset<PresetsSerialized<Inst_CloseBtn>,CloseBtn,Inst_CloseBtn,CloseBtnAttributes> {
 
     /** {@inheritDoc Preset} */
     Type = "CloseBtn" as Presets;
@@ -82,19 +83,19 @@ class CloseBtn extends PresetsData<CloseBtnAttributes> {
         this._tintFrame = closeBtn.WaitForChild("Tint") as Frame;
 
         this.Attributes = {
-            PresetUUID: this.Attributes.PresetUUID,
+            UUID: this.Attributes.UUID,
             TintEnabled: true,
             TintColor: DEFAULT_TINT
         };
 
-        this.InitAttributes();
+        super.InitAttributes();
 
         // Assign attribute handlers after everything is finalized
-        this.AttachAttributeHandler<boolean>(ECloseBtnAttributes.TintEnabled,(enabled: boolean | undefined) => {
+        super.AttachAttributeHandler<boolean>(ECloseBtnAttributes.TintEnabled,(enabled: boolean | undefined) => {
             this._tintFrame.Visible = enabled ? true : false;
         });
 
-        this.AttachAttributeHandler<Color3>(ECloseBtnAttributes.TintColor,(color: Color3 | undefined) => {
+        super.AttachAttributeHandler<Color3>(ECloseBtnAttributes.TintColor,(color: Color3 | undefined) => {
             this._tintFrame.BackgroundColor3 = color ? color : DEFAULT_TINT;
         });
     }
@@ -102,6 +103,11 @@ class CloseBtn extends PresetsData<CloseBtnAttributes> {
     /** {@inheritDoc Destroy} */
     Destroy() {
         super.Destroy();
+    }
+
+    Deserialize<ShouldReturnObject extends boolean = true>(data: PresetsSerialized<Inst_CloseBtn>): ConditionalReturn<ShouldReturnObject,CloseBtn> {
+
+        return this as unknown as ConditionalReturn<ShouldReturnObject,CloseBtn>;
     }
 }
 
