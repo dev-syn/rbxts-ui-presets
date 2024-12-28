@@ -1,19 +1,25 @@
 import { BoundCheck } from 'components/BoundCheck';
-import { ContextMenu } from 'components/ContextMenu';
+import { ContextMenu } from 'components/ContentMenu';
 import Navbar from 'components/Navbar';
 import { SelectableGroup } from 'components/SelectableGroup';
-import { SettingsCreator } from 'components/SettingsCreator';
 import { ToolTip } from 'components/ToolTip';
 
 type ComponentsMap = {
-    SettingsCreator: SettingsCreator,
     BoundCheck: BoundCheck,
     ContextMenu: ContextMenu,
-    Navbar: Navbar<any,any>,
+    Navbar: Navbar<Frame | ScrollingFrame>,
     SelectableGroup: SelectableGroup,
     ToolTip: ToolTip
 }
 
+type ComponentConstructors = {
+    BoundCheck: typeof BoundCheck,
+    ContextMenu: typeof ContextMenu,
+    Navbar: typeof Navbar<Frame | ScrollingFrame>,
+    SelectableGroup: typeof SelectableGroup,
+    ToolTip: typeof ToolTip
+}
+
 type Components = keyof ComponentsMap;
 
-export { ComponentsMap, Components }
+export { ComponentsMap, ComponentConstructors, Components }

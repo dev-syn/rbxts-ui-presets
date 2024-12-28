@@ -1,6 +1,7 @@
 import { Signal } from '@rbxts/beacon';
 
 enum ComponentRecord {
+    BoundCheck = "BoundCheck",
     ContextMenu = "ContextMenu",
     Navbar = "Navbar",
     SelectableGroup = "SelectableGroup",

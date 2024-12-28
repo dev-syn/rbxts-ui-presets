@@ -6,6 +6,11 @@ type PresetsMap = {
     TickSetting: TickSetting
 }
 
-type Presets = keyof PresetsMap;
+type PresetConstructors = {
+    CloseBtn: typeof CloseBtn,
+    TickSetting: typeof TickSetting
+}
 
-export { PresetsMap, Presets }
+type Presets = keyof PresetsMap
+
+export { PresetsMap, PresetConstructors, Presets }
