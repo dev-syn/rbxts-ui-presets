@@ -1,5 +1,0 @@
-class SettingsTemplate {
-
-}
-
-export { SettingsTemplate };
