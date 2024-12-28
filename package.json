@@ -14,7 +14,7 @@
   ],
   "author": "dev-syn",
   "license": "MIT",
-  "types": "out/index.d.ts",
+  "types": "out/types/index.d.ts",
   "files": [
     "out",
     "!**/*.tsbuildinfo"

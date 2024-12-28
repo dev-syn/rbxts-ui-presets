@@ -11,20 +11,22 @@
 		"noLib": true,
 		"resolveJsonModule": true,
 		"experimentalDecorators": true,
-		"forceConsistentCasingInFileNames": true,
+		"forceConsistentCasingInFileNames": false,
 		"moduleDetection": "force",
 		"strict": true,
 		"stripInternal": true,
 		"target": "ESNext",
-		"typeRoots": ["node_modules/@rbxts","./types"],
+		"typeRoots": ["node_modules/@rbxts","src/types"],
 		"declaration": true,
 
 		// configurable
+		"declarationDir": "src/types/generated",
 		"rootDir": "src",
 		"outDir": "out",
 		"baseUrl": "src",
 		"incremental": true,
-		"tsBuildInfoFile": "out/tsconfig.tsbuildinfo"
+		"tsBuildInfoFile": "out/tsconfig.tsbuildinfo",
 	},
+	"include": ["src/**/*.ts"],
 	"exclude": [ "out/**/*" ]
 }
