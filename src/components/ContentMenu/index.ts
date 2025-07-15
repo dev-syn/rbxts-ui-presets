@@ -8,10 +8,9 @@ const RunService: RunService = game.GetService("RunService");
 
 type Button = TextButton | ImageButton;
 
-type Callback = () => void;
-
 enum AssignableAction {
     NONE = "NONE",
+    CUSTOM = "CUSTOM",
     OPEN_UI = "OPEN_UI",
     OPEN_MODULE = "OPEN_MODULE"
 } 
@@ -31,7 +30,7 @@ class ContextItem {
      * This property stores whether the ContextItem should be active,
      * and whether it shouldlisten for any mouse events.
      */
-    isActive: boolean = true;
+    Active: boolean = true;
 
     /**
      * @private
@@ -47,8 +46,12 @@ class ContextItem {
 
     private _assignableAction: AssignableAction = AssignableAction.NONE;
 
+    private _values: Array<unknown> = [];
+
     static Deserialize(data: ContextItemSerializable) : ContextItem {
-        
+        const item: ContextItem = new ContextItem(data.name);
+
+        return item;
     }
 
     /**
@@ -56,8 +59,8 @@ class ContextItem {
      * @param Name - The Name of this ContextItem
      * @param action - The action of this ContextItem
      */
-    constructor(Name: string,action?: Callback) {
-        this.Name = Name;
+    constructor(name: string,action?: Callback) {
+        this.Name = name;
         this._action = action;
 
         this.Btn.Name = `ContextItem-${this.Name}`;
@@ -79,21 +82,30 @@ class ContextItem {
     SetActive(active: boolean): void {
         if (active) {
             // If there is already a connection then we are already active
-            if (this.isActive || this._connection) return;
+            if (this.Active || this._connection) return;
 
-            if (!this._connection) this.Btn.MouseButton1Click.Connect(() => this._action());
+            if (!this._connection) this.Btn.MouseButton1Click.Connect(() => {
+                switch(this._assignableAction) {
+                    case AssignableAction.OPEN_UI:
+                        
+                    case AssignableAction.OPEN_MODULE:
+
+                    case AssignableAction.CUSTOM:
+                        if (this._action) this._action();
+                }
+            });
 
             this.Btn.Visible = true;
-            this.isActive = true;
+            this.Active = true;
         } else {
-            if (!this.isActive) return;
+            if (!this.Active) return;
 
             if (this._connection) {
                 this._connection.Disconnect();
                 this._connection = undefined;
             }
             this.Btn.Visible = false;
-            this.isActive = false;
+            this.Active = false;
         }
     }
 
@@ -101,48 +113,26 @@ class ContextItem {
      * 
      * @param action An action is a callback function hat will be executed when the ContextItem is clicked.
      */
-    AssignAction(actionType: AssignableAction,values: unknown[]): void;
-    AssignAction(actionType: AssignableAction.NONE,action?: Callback): void;
-    AssignAction(actionOrActionType: Callback | AssignableAction,actionOrValues?: Callback | unknown[]) {
-
-        if (type(actionOrActionType) === 'function') {
-            // This is an action
-            
-        } else if(type(actionOrActionType) === 'string') {
-            // This is an assignable action
-
-            if (actionOrActionType !== AssignableAction.NONE) {
-                if (type(actionOrValues) === 'table') {
-                    
-                }
-            } else { // If AssignableAction.NONE
+    AssignAction(actionType: AssignableAction, ...values: unknown[]): void;
+    AssignAction(actionType: AssignableAction.CUSTOM, cb: Callback): void;
+    AssignAction(actionType: AssignableAction.NONE): void;
+    AssignAction(actionType: AssignableAction,actionOrValues?: Callback | unknown[]) {
+        switch(actionType) {
+            case AssignableAction.NONE:
                 this._assignableAction = AssignableAction.NONE;
-                if (!actionOrValues) { // Set action to undefined
-
-                    // Clean old connection, no action was assigned.
-                    if (this._connection) {
-                        this._connection.Disconnect();
-                        this._connection = undefined;
-                    }
-                    this._action = undefined;
-                } else if(type(actionOrValues) === 'function') {
-                    this._action = actionOrValues as Callback;
-                    this.Btn.MouseButton1Click.Connect(() => this._action!());
-                }
-            }
+                this._action = undefined;
+                break;
+            case AssignableAction.CUSTOM:
+                if (type(actionOrValues) !== "function")
+                    error("The action callback is missing for the custom action type.");
+                this._assignableAction = AssignableAction.CUSTOM;
+                this._action = actionOrValues as Callback;
+                break;
+            case AssignableAction.OPEN_UI:
+            case AssignableAction.OPEN_MODULE:
+            default:
+                error("Invalid assignable action type.");
         }
-
-        if (!actionOrValues) {
-            // Clean old connection, no action was assigned.
-            if (this._connection) {
-                this._connection.Disconnect();
-                this._connection = undefined;
-            }
-        }
-
-        this._action = action;
-        // Assign new connection
-        if (actionOrValues) this._connection = this.Btn.MouseButton1Click.Connect(() => this._action!());
     }
 
     /** Destroys this ContextItem. */
@@ -447,7 +437,7 @@ class ContextMenu extends Component<Button> {
      * Gets all the active ContextItems belonging to this ContextMenu.
      * @returns - An array of ContextItem.
      */
-    GetActiveContexts(): ContextItem[] { return this._contexts.filter(c => c.isActive); }
+    GetActiveContexts(): ContextItem[] { return this._contexts.filter(c => c.Active); }
 
     /**
      * Adds the given ContextItem to this ContextMenu.
@@ -497,4 +487,4 @@ class ContextMenu extends Component<Button> {
     }
 }
 
-export { ContextMenu, ContextItem, Button, Callback, TextSizingMode, MenuOptions };
+export { ContextMenu, ContextItem, Button, TextSizingMode, MenuOptions };

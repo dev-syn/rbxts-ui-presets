@@ -1,5 +1,5 @@
 interface ContextItemSerializable {
-    Name: string;
+    name: string;
     isActive: boolean;
     
 }

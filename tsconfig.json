@@ -16,7 +16,7 @@
 		"strict": true,
 		"stripInternal": true,
 		"target": "ESNext",
-		"typeRoots": ["node_modules/@rbxts","src/types"],
+		"typeRoots": ["node_modules/@rbxts","node_modules/@flamework","src/types"],
 		"declaration": true,
 
 		// configurable
@@ -26,6 +26,8 @@
 		"baseUrl": "src",
 		"incremental": true,
 		"tsBuildInfoFile": "out/tsconfig.tsbuildinfo",
+
+		"plugins": [{ "transform": "rbxts-transformer-flamework" }]
 	},
 	"include": ["src/**/*.ts"],
 	"exclude": [ "out/**/*" ]
