@@ -1,15 +1,15 @@
-import { BoundCheck, BoundsLayout } from './core/ui_components/BoundCheck';
-import { ContextMenu } from './core/ui_components/ContentMenu';
-import { SelectableGroup } from './core/ui_components/SelectableGroup';
-import { ToolTip } from './core/ui_components/ToolTip';
+import { OnStart, Service } from '@flamework/core';
 import { UIPresetsConfig } from './UIPresetsConfig';
 
-export { 
-    UIPresetsConfig,
-    // Components
-    BoundCheck, BoundsLayout, ContextMenu, SelectableGroup, ToolTip,
-    // Presets
-    CloseBtn, TickSetting,
-    // Serialization
-    ComponentsSerialized, PresetsSerialized
-};
+@Service()
+class UIPresetsService implements OnStart {
+	Config: typeof UIPresetsConfig = UIPresetsConfig;
+
+	onStart(): void {
+		throw new Error('Method not implemented.');
+	}
+
+
+}
+
+export = UIPresetsConfig;
