@@ -1,0 +1,15 @@
+{
+	"name": "ui-presets",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"Packages": {
+				"$path": "out/node_modules"
+			},
+			"Shared": {
+				"$className": "Folder",
+				"ui-presets": { "$path": "default.project.json" }
+			}
+		}
+	}
+}

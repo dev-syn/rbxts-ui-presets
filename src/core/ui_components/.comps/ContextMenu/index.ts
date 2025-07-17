@@ -1,8 +1,7 @@
 import { t } from '@rbxts/t';
-import { UIPresetsConfig } from '../../UIPresetsConfig';
-import { Component } from 'components';
-import type { Components } from 'types/components';
-import { ContextItemSerializable } from './serializable';
+import { UIPresetsConfig } from '../../../../UIPresetsConfig';
+import { Component } from '../../../ui_components/index';
+import { Components } from '../../../../types/components';
 
 const RunService: RunService = game.GetService("RunService");
 
@@ -47,12 +46,6 @@ class ContextItem {
     private _assignableAction: AssignableAction = AssignableAction.NONE;
 
     private _values: Array<unknown> = [];
-
-    static Deserialize(data: ContextItemSerializable) : ContextItem {
-        const item: ContextItem = new ContextItem(data.name);
-
-        return item;
-    }
 
     /**
      * Constructs a new ContextItem object.

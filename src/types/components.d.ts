@@ -1,8 +1,8 @@
-import { BoundCheck } from 'components/BoundCheck';
-import { ContextMenu } from 'components/ContentMenu';
+import { BoundCheck } from 'ui_components/components/BoundCheck';
+import { ContextMenu } from 'ui_components/components/ContentMenu';
 import Navbar from 'components/Navbar';
-import { SelectableGroup } from 'components/SelectableGroup';
-import { ToolTip } from 'components/ToolTip';
+import { SelectableGroup } from 'ui_components/components/SelectableGroup';
+import { ToolTip } from 'ui_components/components/ToolTip';
 
 type ComponentsMap = {
     BoundCheck: BoundCheck,

@@ -1,6 +1,6 @@
 import { Signal } from '@rbxts/beacon';
 import Object from '@rbxts/object-utils';
-import Component from 'components';
+import Component from 'ui_components/components';
 import type { Components } from 'types/components';
 
 type Button = TextButton | ImageButton;

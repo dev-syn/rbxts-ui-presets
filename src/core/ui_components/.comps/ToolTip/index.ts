@@ -1,7 +1,7 @@
 import { t } from '@rbxts/t';
-import { UIPresetsConfig } from '../../UIPresetsConfig';
+import { UIPresetsConfig } from '../../../UIPresetsConfig';
 import { BoundCheck } from '../BoundCheck';
-import Component from 'components';
+import Component from 'ui_components/components';
 import type { Components } from 'types/components';
 
 const TextService: TextService = game.GetService('TextService');

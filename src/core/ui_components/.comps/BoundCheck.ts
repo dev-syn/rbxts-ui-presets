@@ -1,12 +1,23 @@
 import { Signal } from '@rbxts/beacon';
 import { Players, RunService, UserInputService } from '@rbxts/services';
-import { Component } from 'components';
-import type { Components } from 'types/components';
-import { BoundCheckOptions, BoundCoord } from './shared';
-import { BoundCheckSerializable, BoundsLayoutSerializable } from './serializable';
-import { ConditionalReturn, Serializer } from 'plugin/serialization/Serializer';
-import PartialComponent from 'plugin/PartialComponent';
-import { Constructor } from 'utils';
+import { Component } from '../index';
+import type { Components } from '../../../types/components';
+
+/** A table of configurable options that change the default behavior of {@link BoundCheck}. */
+interface BoundCheckOptions {
+    /** Whether this BoundCheck should only trigger as in bounds if it's the topmost element in bounds, Otherwise the bound check will still be within bounds even if another UI is on top of it. Default(false) */
+    TopMostOnly: boolean;
+    /** Whether this BoundCheck should ignore the gui inset of '36' pixels. Default(false) */
+    IgnoreGuiInset: boolean;
+    /** Whether this {@link BoundCheck} will skip querying on elements that are not visible, Otherwise the element will still bound check when element is invisible. Default(true) */
+    ConsiderVisibility: boolean;
+}
+
+/** A bound coordinate contains a X and Y absolute position. */
+interface BoundCoord {
+    X: number;
+    Y: number;
+}
 
 const PlayerGui: PlayerGui = Players.LocalPlayer.WaitForChild("PlayerGui") as PlayerGui;
 
@@ -15,7 +26,7 @@ function newBoundCoord(x: number = 0,y: number = 0): BoundCoord { return { X: x,
 /**
  * This stores the bounds layout of a {@link BoundCheck} object.
  */
-class BoundsLayout extends Serializer<BoundsLayoutSerializable,BoundsLayout> {
+class BoundsLayout {
 
     static __tostring = (lay: BoundsLayout) => {
         return `{
@@ -26,11 +37,6 @@ class BoundsLayout extends Serializer<BoundsLayoutSerializable,BoundsLayout> {
 
             Size(X: ${lay.Size.X}, Y: ${lay.Size.Y})
         }`
-    }
-
-    static Deserialize(data: BoundsLayoutSerializable): BoundsLayout | undefined {
-        if (!RunService.IsStudio()) error("[UIPresets]: Deserialize() can only be called within Studio.");
-        return new BoundsLayout(data);
     }
 
     /** The ClassName which is 'BoundsLayout'. */
@@ -48,44 +54,14 @@ class BoundsLayout extends Serializer<BoundsLayoutSerializable,BoundsLayout> {
     /** The size of this bounds. */
     Size: BoundCoord = { X: 0, Y: 0 };
 
-    protected _isSerializable: boolean = true;
-
-    constructor(serialized: BoundsLayoutSerializable)
-    constructor(c1: BoundCoord,c2: BoundCoord,c3: BoundCoord,c4: BoundCoord,size: BoundCoord)
-    constructor(
-        c1OrSerialized: BoundCoord | BoundsLayoutSerializable,
-        c2?: BoundCoord,
-        c3?: BoundCoord,
-        c4?: BoundCoord,
-        size?: BoundCoord
-    ) {
-        super();
-
-        if (Serializer.HasSerializedType(c1OrSerialized)) {
-            const data: BoundsLayoutSerializable = c1OrSerialized;
-            this.C1 = data.C1;
-            this.C2 = data.C2;
-            this.C3 = data.C3;
-            this.C4 = data.C4;
-            size = data.Size;
-        } else if (c2 && c3 && c4 && size) {
-            this.C1 = c1OrSerialized;
-            this.C2 = c2;
-            this.C3 = c3;
-            this.C4 = c4;
-            this.Size = size;
-        }
-    }
-
-    Serialize(): BoundsLayoutSerializable {
-        return {
-            C1: this.C1,
-            C2: this.C2,
-            C3: this.C3,
-            C4: this.C4,
-            Size: this.Size,
-            _serializableType: "BoundsLayoutSerializable"
-        };
+    constructor(c1: BoundCoord,c2: BoundCoord,c3: BoundCoord,c4: BoundCoord,size: BoundCoord) {
+				if (c1 && c2 && c3 && c4 && size) {
+					this.C1 = c1;
+					this.C2 = c2;
+					this.C3 = c3;
+					this.C4 = c4;
+					this.Size = size;
+				} else error("Invalid parameters for BoundsLayout constructor");
     }
 
 }
@@ -284,4 +260,4 @@ class BoundCheck extends Component<BoundCheckSerializable,BoundCheck,GuiObject> 
 
 }
 
-export { BoundCheck, BoundsLayout };
+export { BoundCheck, BoundsLayout, BoundCheckOptions, BoundCoord };
