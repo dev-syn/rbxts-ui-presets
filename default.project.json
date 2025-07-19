@@ -1,4 +1,5 @@
 {
     "name": "ui-presets",
+		"globIgnorePaths": ["out/tests"],
     "tree": { "$path": "out" }
 }
