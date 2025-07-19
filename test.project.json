@@ -3,8 +3,13 @@
 	"tree": {
 		"$className": "DataModel",
 		"ReplicatedStorage": {
-			"Packages": {
-				"$path": "out/node_modules"
+			"rbxts_include": {
+				"$path": "../../include",
+				"node_modules": {
+					"$className": "Folder",
+					"@rbxts": { "$path": "../../node_modules/@rbxts" },
+					"@flamework": { "$path": "node_modules/@flamework" }
+				}
 			},
 			"Shared": {
 				"$className": "Folder",
