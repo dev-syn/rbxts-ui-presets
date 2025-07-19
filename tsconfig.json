@@ -10,23 +10,22 @@
 		"moduleResolution": "Node",
 		"noLib": true,
 		"resolveJsonModule": true,
-		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": false,
 		"moduleDetection": "force",
 		"strict": true,
 		"stripInternal": true,
 		"target": "ESNext",
-		"typeRoots": ["node_modules/@rbxts","node_modules/@flamework","src/types"],
+		"typeRoots": ["node_modules/@rbxts","node_modules/@flamework","src/typings"],
 		"declaration": true,
-
 		// configurable
-		"declarationDir": "src/types/generated",
+		"declarationDir": "src/typings/generated",
 		"rootDir": "src",
 		"outDir": "out",
 		"baseUrl": "src",
 		"incremental": true,
 		"tsBuildInfoFile": "out/tsconfig.tsbuildinfo",
 
+		"experimentalDecorators": true,
 		"plugins": [{ "transform": "rbxts-transformer-flamework" }]
 	},
 	"include": ["src/**/*.ts"],
