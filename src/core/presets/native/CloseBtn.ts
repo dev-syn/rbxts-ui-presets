@@ -1,31 +1,40 @@
-import Object from '@rbxts/object-utils';
-import { Preset, PresetsDataAttributes, PresetsSerialized } from 'presets';
-import { ConditionalReturn } from 'plugin/serialization/Serializer';
-import type { Presets } from 'types/presets';
+import type { Presets } from 'typings/presets';
+import { Preset } from '..';
+import UIPresetsService from '../../..';
+import { UUID } from '../../../typings';
+import { Component } from '@flamework/components';
+import { t } from '@rbxts/t';
+import { OnStart } from '@flamework/core';
 
-type Inst_CloseBtn = ImageButton & {
-    UIAspectRatioConstraint: UIAspectRatioConstraint;
-    Tint: Frame;
-}
+// #region Preset_CloseBtn
+	type Preset_CloseBtn = ImageButton & {
+		UIAspectRatioConstraint: UIAspectRatioConstraint;
+		Tint: Frame;
+	}
+	const t_Preset_CloseBtn = t.intersection(t.instanceIsA("ImageButton"),t.children({
+		UIAspectRatioConstraint: t.instanceIsA("UIAspectRatioConstraint"),
+		Tint: t.instanceIsA("Frame")
+	}));
+// #endregion
 
 enum ECloseBtnAttributes {
-    TintEnabled = "TintEnabled",
-    TintColor = "TintColor"
+	TintEnabled = "TintEnabled",
+	TintColor = "TintColor"
 }
 
 /**
  * The attributes that belong to preset
  */
-interface CloseBtnAttributes extends PresetsDataAttributes {
-    /** Whether this button will show a tint when hovered. */
-    TintEnabled: boolean;
-    /** The color of the tint which is a Color3 */
-    TintColor: Color3;
+interface CloseBtnAttributes {
+	/** Whether this button will show a tint when hovered. */
+	TintEnabled: boolean;
+	/** The color of the tint which is a Color3 */
+	TintColor: Color3;
 }
 
 const DEFAULT_TINT: Color3 = Color3.fromRGB(255,0,0);
 
-function createCloseButton(): Inst_CloseBtn {
+function createCloseButton(): Preset_CloseBtn {
     const CloseBtn = new Instance("ImageButton");
     CloseBtn.AnchorPoint = new Vector2(1, 0.5);
     CloseBtn.AutoButtonColor = false;
@@ -53,7 +62,7 @@ function createCloseButton(): Inst_CloseBtn {
     Tint.Visible = false;
     Tint.Parent = CloseBtn;
 
-    return CloseBtn as Inst_CloseBtn;
+    return CloseBtn as Preset_CloseBtn;
 }
 
 /**
@@ -61,54 +70,45 @@ function createCloseButton(): Inst_CloseBtn {
  * 'Red' tint, this can be overridden inside {@link PresetsData.Attributes}, see {@link CloseBtnAttributes}
  * for this presets attributes.
  */
-class CloseBtn extends Preset<PresetsSerialized<Inst_CloseBtn>,CloseBtn,Inst_CloseBtn,CloseBtnAttributes> {
+@Component({
+	tag: 'uipresets_CloseBtn',
+	// Only allow attaching instances that match the same structure of the CloseBtn preset.
+	predicate: (inst: Instance) => t_Preset_CloseBtn(inst)
+})
+class CloseBtn extends Preset implements OnStart {
 
-    /** {@inheritDoc Preset} */
-    Type = "CloseBtn" as Presets;
-    /** The owner which is the CloseBtn roblox Instance. */
-    declare Owner: Inst_CloseBtn;
-    /** The attributes that belong to CloseBtn. */
-    declare Attributes: CloseBtnAttributes;
+	/** {@inheritDoc Preset} */
+	Type = "CloseBtn" as Presets;
 
-    /** A reference to the Frame that is for the CloseBtn tint. */
-    private _tintFrame: Frame;
+	/** The attributes that belong to CloseBtn. */
+	declare Attributes: CloseBtnAttributes;
 
-    /**
-     * Constructs a new close button preset.
-     */
-    constructor() {
-        const closeBtn: Inst_CloseBtn = createCloseButton();
-        super(closeBtn);
+	declare readonly UUID: UUID;
 
-        this._tintFrame = closeBtn.WaitForChild("Tint") as Frame;
+	/** A reference to the Frame that is for the CloseBtn tint. */
+	private _tintFrame: Frame;
 
-        this.Attributes = {
-            UUID: this.Attributes.UUID,
-            TintEnabled: true,
-            TintColor: DEFAULT_TINT
-        };
+	/**
+	 * Constructs a new close button preset.
+	 */
+	constructor(uiPresetsService: UIPresetsService) {
+		super();
+		this.UUID = uiPresetsService.fetchNewUUID();
+		const closeBtn: Preset_CloseBtn = createCloseButton();
 
-        super.InitAttributes();
+		this._tintFrame = closeBtn.WaitForChild("Tint") as Frame;
 
-        // Assign attribute handlers after everything is finalized
-        super.AttachAttributeHandler<boolean>(ECloseBtnAttributes.TintEnabled,(enabled: boolean | undefined) => {
-            this._tintFrame.Visible = enabled ? true : false;
-        });
+		
 
-        super.AttachAttributeHandler<Color3>(ECloseBtnAttributes.TintColor,(color: Color3 | undefined) => {
-            this._tintFrame.BackgroundColor3 = color ? color : DEFAULT_TINT;
-        });
-    }
+	}
+	onStart(): void {
+		
+	}
 
-    /** {@inheritDoc Destroy} */
-    Destroy() {
-        super.Destroy();
-    }
-
-    Deserialize<ShouldReturnObject extends boolean = true>(data: PresetsSerialized<Inst_CloseBtn>): ConditionalReturn<ShouldReturnObject,CloseBtn> {
-
-        return this as unknown as ConditionalReturn<ShouldReturnObject,CloseBtn>;
-    }
+	/** {@inheritDoc Destroy} */
+	Destroy() {
+		super.Destroy();
+	}
 }
 
 export { CloseBtn };
