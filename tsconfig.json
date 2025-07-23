@@ -19,8 +19,8 @@
 		"declaration": true,
 		// configurable
 		"declarationDir": "src/typings/generated",
-		"rootDir": "./src",
-		"outDir": "./out",
+		"rootDir": "src",
+		"outDir": "out",
 		"baseUrl": "./src",
 		"incremental": true,
 		"tsBuildInfoFile": "out/tsconfig.tsbuildinfo",
