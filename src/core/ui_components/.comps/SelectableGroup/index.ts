@@ -1,7 +1,8 @@
 import { Signal } from '@rbxts/beacon';
 import Object from '@rbxts/object-utils';
-import Component from 'ui_components/components';
-import type { Components } from 'types/components';
+import UIComponent from '../../';
+import { UIComponents } from '../../../../typings/components';
+import UIPresetsService from '../../../..';
 
 type Button = TextButton | ImageButton;
 
@@ -22,33 +23,33 @@ const rand: Random = new Random();
 /**
  * This class allows you to group TextButton/ImageButton buttons together and allow single or multiple selections between those buttons.
  */
-class SelectableGroup extends Component {
+class SelectableGroup extends UIComponent {
 
-    /** {@inheritDoc Component} */
-    Type = "SelectableGroup" as Components;
+	/** {@inheritDoc Component} */
+	Type = "SelectableGroup" as UIComponents;
 
-    /** The buttons that belong to this SelectableGroup. */
-    SelectionGroup: Button[];
+	/** The buttons that belong to this SelectableGroup. */
+	SelectionGroup: Button[];
 
-    /** The button('s) that are currently selected. */
-    CurrentSelection: Button[] = [];
+	/** The button('s) that are currently selected. */
+	CurrentSelection: Button[] = [];
 
-    /** The default selected button that is assigned so that when DeselectAll() is called this button will remain selected if Config.requiredSelection */
-    DefaultSelection?: Button;
+	/** The default selected button that is assigned so that when DeselectAll() is called this button will remain selected if Config.requiredSelection */
+	DefaultSelection?: Button;
 
-    /**
-     * A Beacon Signal that when fired will give the previous selection and the new current selection.
-     * 
-     * Note:
-     * The previous selection can be undefined in cases where there was no selection.
-     * The current selection can be undefined in cases where requireSelection is false and nothing is selected.
-     * @event
-     */
-    SelectionChanged: Signal<[prev: Button | undefined,current: Button | undefined]> = new Signal();
+	/**
+	 * A Beacon Signal that when fired will give the previous selection and the new current selection.
+	 * 
+	 * Note:
+	 * The previous selection can be undefined in cases where there was no selection.
+	 * The current selection can be undefined in cases where requireSelection is false and nothing is selected.
+	 * @event
+	 */
+	SelectionChanged: Signal<[prev: Button | undefined,current: Button | undefined]> = new Signal();
 	
 	// Configurable Options
 
-    /**The Group Config that contains configurable options that will change the default behavior of this SelectableGroup. */
+	/**The Group Config that contains configurable options that will change the default behavior of this SelectableGroup. */
 	Config: SelectableGroupConfig = {
         isSingleOnly: false,
         requireSelection: false,
@@ -56,105 +57,107 @@ class SelectableGroup extends Component {
         borderSize: 2
     }
 
-    /**
-     * @private
-     * A map of this buttons connections of this SelectableGroup.
-     */
-    private selectableConnections: Map<Button,RBXScriptConnection[]> = new Map();
+	/**
+	 * @private
+	 * A map of this buttons connections of this SelectableGroup.
+	 */
+	private selectableConnections: Map<Button,RBXScriptConnection[]> = new Map();
 
-    /**
-     * Constructs a SelectableGroup object.
-     * @param group - An optional parameter to assign this SelectableGroup buttons
-     */
-	constructor(group?: Button[]) {
-        super();
-        this.SelectionGroup = [];
-        if (group) group.forEach(btn => this.Add(btn));
+	/**
+	 * Constructs a SelectableGroup object.
+	 * @param group - An optional parameter to assign this SelectableGroup buttons
+	 */
+	constructor(
+		private readonly uiPresetsService: UIPresetsService,
+		group?: Button[]
+	) {
+		const uuid = uiPresetsService.fetchNewUUID();
+		super(uuid);
+		this.SelectionGroup = [];
+		if (group) group.forEach(btn => this.Add(btn));
 	}
 
-    /** Initializes the {@link SelectionGroup}. \*Remember to call this for intended behavior* */
-    Init() {
+	/** Initializes the {@link SelectionGroup}. \*Remember to call this for intended behavior* */
+	Init() {
+		if (this.DefaultSelection) {
+				if (!this.SelectionGroup.includes(this.DefaultSelection)) this.SelectionGroup.push(this.DefaultSelection);
 
-        if (this.DefaultSelection) {
-            if (!this.SelectionGroup.includes(this.DefaultSelection)) this.SelectionGroup.push(this.DefaultSelection);
+				// Make the default button selected
+				this.CurrentSelection.push(this.DefaultSelection);
+				this.DefaultSelection.BorderSizePixel = this.Config.borderSize;
+		}
+	}
 
-            // Make the default button selected
-            this.CurrentSelection.push(this.DefaultSelection);
-            this.DefaultSelection.BorderSizePixel = this.Config.borderSize;
-        }
-    }
+	/**
+	 * Destroys this SelectableGroup clearing all references to the buttons.
+	 */
+	Destroy() {
+		super.Destroy();
+		// Clear all the button references to each button in this group
+		for (const [btn,connections] of Object.entries(this.selectableConnections)) {
+				connections.forEach(conn => conn.Disconnect());
+		}
+		this.selectableConnections.clear();
 
-    /**
-     * Destroys this SelectableGroup clearing all references to the buttons.
-     */
-    Destroy() {
-        super.Destroy();
-        // Clear all the button references to each button in this group
-        for (const [btn,connections] of Object.entries(this.selectableConnections)) {
-            connections.forEach(conn => conn.Disconnect());
-        }
-        this.selectableConnections.clear();
+		this.Config.requireSelection = false;
+		// Reset all of the buttons selection state to none.
+		this.UnselectAll();
+		
+		// Clear all table references
+		this.CurrentSelection.clear();
+		this.SelectionGroup.clear();
+		this.DefaultSelection = undefined;
+	}
 
-        this.Config.requireSelection = false;
-        // Reset all of the buttons selection state to none.
-        this.UnselectAll();
-        
-        // Clear all table references
-        this.CurrentSelection.clear();
-        this.SelectionGroup.clear();
-        this.DefaultSelection = undefined;
-    }
+	/**
+	 * This method triggers the selection of the new selected button. This is intended for external use only
+	 * @param newSelection - The button that will represent the new selection or undefined for no selection.
+	 */
+	Select(newSelection: Button | undefined): void {
+		const config: SelectableGroupConfig = this.Config;
 
-    /**
-     * This method triggers the selection of the new selected button. This is intended for external use only
-     * @param newSelection - The button that will represent the new selection or undefined for no selection.
-     */
-    Select(newSelection: Button | undefined): void {
-        const config: SelectableGroupConfig = this.Config;
+		if (newSelection) {
+				if (!this.SelectionGroup.includes(newSelection)) {
+						warn(`Could not select new selection since it doesn't exist in the selection group with button name: ${newSelection.Name}`);
+						return;
+				}
 
-        if (newSelection) {
-            if (!this.SelectionGroup.includes(newSelection)) {
-                warn(`Could not select new selection since it doesn't exist in the selection group with button name: ${newSelection.Name}`);
-                return;
-            }
+				if (this.IsSelected(newSelection)) {
+						warn("Could not select new selection since it already is selected.");
+						return;
+				}
 
-            if (this.IsSelected(newSelection)) {
-                warn("Could not select new selection since it already is selected.");
-                return;
-            }
+				const prevSelection: Button = this.CurrentSelection[0];
+				if (config.isSingleOnly && prevSelection) {
+						prevSelection.BorderSizePixel = 0;
+						this.CurrentSelection.pop();
+				}
 
-            const prevSelection: Button = this.CurrentSelection[0];
-            if (config.isSingleOnly && prevSelection) {
-                prevSelection.BorderSizePixel = 0;
-                this.CurrentSelection.pop();
-            }
+				this.CurrentSelection.push(newSelection);
+				newSelection.BorderSizePixel = this.Config.borderSize;
+				this.SelectionChanged.Fire(prevSelection,newSelection);
+		} else {
+			if (!config.isSingleOnly) {
+					warn("Could not select a non existent selection with multi-selections, use UnselectAll() instead.");
+					return;
+			}
 
-            this.CurrentSelection.push(newSelection);
-            newSelection.BorderSizePixel = this.Config.borderSize;
-            this.SelectionChanged.Fire(prevSelection,newSelection);
-        } else {
+			const selectionsSize: number = this.CurrentSelection.size();
+			if (selectionsSize === 0) {
+					warn("Could not remove selection from selection group no selection is present.");
+					return;
+			}
+			if (config.requireSelection && selectionsSize === 1) {
+					warn("Could not remove selection from selection group; since a selection is required.");
+					return;
+			}
 
-            if (!config.isSingleOnly) {
-                warn("Could not select a non existent selection with multi-selections, use UnselectAll() instead.");
-                return;
-            }
-
-            const selectionsSize: number = this.CurrentSelection.size();
-            if (selectionsSize === 0) {
-                warn("Could not remove selection from selection group no selection is present.");
-                return;
-            }
-            if (config.requireSelection && selectionsSize === 1) {
-                warn("Could not remove selection from selection group; since a selection is required.");
-                return;
-            }
-
-            const prevSelection: Button = this.CurrentSelection[0];
-            prevSelection.BorderSizePixel = 0;
-            this.CurrentSelection.pop();
-            this.SelectionChanged.Fire(prevSelection,undefined);
-        }
-    }
+			const prevSelection: Button = this.CurrentSelection[0];
+			prevSelection.BorderSizePixel = 0;
+			this.CurrentSelection.pop();
+			this.SelectionChanged.Fire(prevSelection,undefined);
+		}
+	}
 
     /** Adds a button to the {@link SelectableGroup}. */
     Add(button: Button) {
