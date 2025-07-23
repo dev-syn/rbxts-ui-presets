@@ -1,10 +1,10 @@
 import type { Presets } from 'typings/presets';
-import { Preset } from '..';
-import UIPresetsService from '../../..';
-import { UUID } from '../../../typings';
 import { Component } from '@flamework/components';
 import { t } from '@rbxts/t';
 import { OnStart } from '@flamework/core';
+import { Preset } from '.';
+import { UUID } from '../../typings';
+import type UIPresetsService from '../..';
 
 // #region Preset_CloseBtn
 	type Preset_CloseBtn = ImageButton & {

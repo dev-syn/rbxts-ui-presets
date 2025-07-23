@@ -1,7 +1,7 @@
-import type UIPresetsService from '../../..';
-import { UUID } from '../../../typings';
-import { Preset } from '../../presets/index';
 import type { Presets } from 'typings/presets';
+import { Preset } from '.';
+import { UUID } from '../../typings';
+import UIPresetsService from '../..';
 
 /**
  * The TickSetting type that this setting will contain either a Check for a checkmark or a cross as a mark.
