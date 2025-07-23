@@ -1,40 +1,51 @@
-import { Components } from 'typings/components';
+import { BaseComponent } from '@flamework/components';
+import { UIComponents } from 'typings/components';
 
-/**
- * A base class for all the UIPresets components.
- * @typeParam S - The serializable object of the consuming class
- * @typeParam D - The deserialized object for the consuming class
- * @typeParam T - The Owner GuiObject type
- * 
- * @remarks
- * Each Component should have a static method called 'ReconstructFromPartial'
- * this static method should follow these parameters
- * (partial: PartialComponent<GuiObject | undefined,(Derived ComponentClass)>) -> Derived Component Class
- * This is a method that takes a partial component and will reconstruct the Component class with the data inside the Partial class.
- */
-abstract class Component<T extends GuiObject | undefined = undefined> {
-    /** The type/name of this Component. */
-    abstract Type: Components;
-
-    /** The T extended GuiObject that this Component owns. NOTE: Not every component will have an Owner. */
-    Owner?: T;
-
-    /**
-     * The unique ID of this Component.
-     * @readonly
-     */
-    readonly UUID: string;
-
-    constructor(uuid: string,owner?: T | undefined) {
-			this.UUID = uuid;
-      this.Owner = owner;
-    }
-
-    /** Destroys the Component cleaning up used references. */
-    Destroy() {
-        this.Owner = undefined;
-    }
+function generateDefaultAttributes() {
 
 }
+/**
+ * A base class for all the UIPresets components.
+ * @typeParam A - The attributes with their name and value being the type guards
+ * @typeParam T - The Instance type that this component will use
+ */
+abstract class UIComponent<A = {},T extends GuiObject = GuiObject> extends BaseComponent<A,T> {
 
-export = Component
+	/**
+	 * The base type of the derived classes, this will always be Preset and should never be changed.
+	 * @readonly 
+	 */
+	readonly BaseType: "Component" = "Component";
+
+	/** The type/name of this Component. */
+	abstract Type: UIComponents;
+
+	/**
+	 * The unique ID of this Component.
+	 * @readonly
+	 */
+	abstract UUID: string;
+
+	constructor() {
+		super();
+	}
+
+	override destroy() {
+		this.Destroy(true);
+		super.destroy();
+	}
+
+	/** 
+	 * Destroys the Component cleaning up used references.
+	 * When the attached Instance is destroyed
+	 * this is then called followed by flamework's processing.
+	*/
+	Destroy(_internal = false) {
+		print(`${this.instance?.Name || "N/A"} component was triggered to be Destroyed.`);
+		// Release the component from the instance
+		if (!_internal) super.destroy();
+		print(`${this.instance?.Name || "N/A"} component has finished being destroyed.`);
+	}
+}
+
+export = UIComponent
