@@ -1,24 +1,15 @@
-import { BoundCheck } from '../core/ui_components/.comps/BoundCheck';
-import { ContextMenu } from '../core/ui_components/.comps/ContentMenu/index';
-import { SelectableGroup } from '../core/ui_components/.comps/SelectableGroup';
-import { ToolTip } from '../core/ui_components/.comps/ToolTip';
-
-type ComponentsMap = {
-    BoundCheck: BoundCheck,
-    ContextMenu: ContextMenu,
-    Navbar: Navbar<Frame | ScrollingFrame>,
-    SelectableGroup: SelectableGroup,
-    ToolTip: ToolTip
-}
+import { BoundCheck } from '../core/ui_components/.comps/BoundCheck/index';
+import { ContextMenu } from '../core/ui_components/.comps/ContextMenu/index';
+import { SelectableGroup } from '../core/ui_components/.comps/SelectableGroup/index';
+import { ToolTip } from '../core/ui_components/.comps/ToolTip/index';
 
 type ComponentConstructors = {
     BoundCheck: typeof BoundCheck,
     ContextMenu: typeof ContextMenu,
-    Navbar: typeof Navbar<Frame | ScrollingFrame>,
     SelectableGroup: typeof SelectableGroup,
     ToolTip: typeof ToolTip
 }
 
-type Components = keyof ComponentsMap;
+type UIComponents = keyof ComponentConstructors;
 
-export { ComponentsMap, ComponentConstructors, Components }
+export { ComponentConstructors, UIComponents }
