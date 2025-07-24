@@ -3,6 +3,9 @@ import Object from '@rbxts/object-utils';
 import UIComponent from '../../';
 import { UIComponents } from '../../../../typings/components';
 import UIPresetsService from '../../../..';
+import { Component } from '@flamework/components';
+import { OnStart } from '@flamework/core';
+import { UUID } from '../../../../typings';
 
 type Button = TextButton | ImageButton;
 
@@ -23,11 +26,12 @@ const rand: Random = new Random();
 /**
  * This class allows you to group TextButton/ImageButton buttons together and allow single or multiple selections between those buttons.
  */
-class SelectableGroup extends UIComponent {
+@Component()
+class SelectableGroup extends UIComponent implements OnStart {
 
 	/** {@inheritDoc Component} */
 	Type = "SelectableGroup" as UIComponents;
-
+	
 	/** The buttons that belong to this SelectableGroup. */
 	SelectionGroup: Button[];
 
@@ -55,7 +59,9 @@ class SelectableGroup extends UIComponent {
         requireSelection: false,
         borderColor: Color3.fromRGB(255,255,255),
         borderSize: 2
-    }
+	}
+
+	declare UUID: UUID;
 
 	/**
 	 * @private
@@ -71,10 +77,13 @@ class SelectableGroup extends UIComponent {
 		private readonly uiPresetsService: UIPresetsService,
 		group?: Button[]
 	) {
-		const uuid = uiPresetsService.fetchNewUUID();
-		super(uuid);
+		super();
+		this.UUID = uiPresetsService.fetchNewUUID();
 		this.SelectionGroup = [];
 		if (group) group.forEach(btn => this.Add(btn));
+	}
+	onStart(): void {
+		throw new Error('Method not implemented.');
 	}
 
 	/** Initializes the {@link SelectionGroup}. \*Remember to call this for intended behavior* */
