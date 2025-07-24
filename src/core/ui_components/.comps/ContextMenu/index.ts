@@ -5,6 +5,7 @@ import type { UIComponents } from '../../../../typings/components'
 import { Component } from '@flamework/components';
 import type UIPresetsService from '../../../..';
 import { OnStart } from '@flamework/core';
+import { UUID } from '../../../../typings';
 
 const RunService: RunService = game.GetService("RunService");
 
@@ -39,6 +40,7 @@ class ContextItem {
 	 */
 	Active: boolean = true;
 
+// #region PRIVATE_MEMBERS
 	/**
 	 * @private
 	 * The Btn connection to trigger the action.
@@ -51,6 +53,8 @@ class ContextItem {
 	private _action?: Callback;
 	private _assignableAction: AssignableAction = AssignableAction.NONE;
 	private _values: Array<unknown> = [];
+// #endregion
+
 	/**
 	 * Constructs a new ContextItem object.
 	 * @param Name - The Name of this ContextItem
@@ -163,6 +167,7 @@ interface MenuOptions {
 
 @Component()
 class ContextMenu extends UIComponent<{},Button> implements OnStart {
+// #region CLASS_STATIC
 	static contextMenuSG: ScreenGui = new Instance("ScreenGui");
 	static textFitLabel: TextLabel = new Instance("TextLabel");
 	
@@ -184,6 +189,7 @@ class ContextMenu extends UIComponent<{},Button> implements OnStart {
 		// When the HighestDisplayOrder is changed update the ContextMenuSG DisplayOrder
 		UIPresetsConfig.OnDisplayOrderChanged.Connect((newOrder: number) => this.contextMenuSG.DisplayOrder = newOrder + 1);
 	}
+// #endregion
 
 	/** {@inheritDoc 	UIComponent} */
 	Type = "ContextMenu" as UIComponents;
@@ -201,12 +207,14 @@ class ContextMenu extends UIComponent<{},Button> implements OnStart {
 			textSizingMode: TextSizingMode.MinimumCommon
 	};
 
+	declare readonly UUID: UUID;
+
+// #region CLASS_PRIVATE
 	/**
 	 * @private
 	 * Stores the common text size of each active context item.
 	 */
 	private _itemTextSize?: number;
-
 	/**
 	 * @private
 	 * Stores the absolute ViewSize of the clients screen.
@@ -222,6 +230,7 @@ class ContextMenu extends UIComponent<{},Button> implements OnStart {
 	 * The connections that belong to this ContextMenu.
 	 */
 	private _connections: RBXScriptConnection[] = [];
+// #endregion
 
 	/**
 	 * Constructs a new ContextMenu object.
@@ -234,9 +243,9 @@ class ContextMenu extends UIComponent<{},Button> implements OnStart {
 	) {
 		// TODO: Filter out any contexts that aren't of ContextItem type.
 		contexts?.forEach(context => this._contexts.push(context));
-		// Request a unique UUID of components
-		const uuid: string = uiPresetsService.fetchNewUUID();
-		super(uuid);
+		
+		super();
+		this.UUID = uiPresetsService.fetchNewUUID();
 	}
 	
 	onStart(): void {
@@ -273,6 +282,7 @@ class ContextMenu extends UIComponent<{},Button> implements OnStart {
 			this._connections.push(this.instance.Destroying.Once(() => this.Destroy()));
 	}
 
+// #region CLASS_OVERRIDE
 	/**
 	 * Destroys this ContextMenu object.
 	 */
@@ -289,6 +299,7 @@ class ContextMenu extends UIComponent<{},Button> implements OnStart {
 			this.menuBG.Parent = undefined;
 			if (ContextMenu._previousMenu === this) ContextMenu._previousMenu = undefined;
 	}
+// #endregion
 
 	/**
 	 * Draws the sizing and positioning for both the ContextMenu and ContextItems that are active.
