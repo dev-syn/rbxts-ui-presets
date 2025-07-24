@@ -17,7 +17,7 @@ function generateDefaultAttributes(): {} {
 abstract class Preset<A extends {} = {},T extends Instance = Instance> extends BaseComponent<A,T> {
     
 	/**
-	 * The base type of the derived classes, this will always be Preset and should never be changed.
+	 * The base type of the derived classes, this will always be 'Preset' and should never be changed.
 	 * @readonly 
 	 */
 	readonly BaseType: "Preset" = "Preset";

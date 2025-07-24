@@ -12,7 +12,7 @@ function generateDefaultAttributes() {
 abstract class UIComponent<A = {},T extends GuiObject = GuiObject> extends BaseComponent<A,T> {
 
 	/**
-	 * The base type of the derived classes, this will always be Preset and should never be changed.
+	 * The base type of the derived classes, this will always be 'Component' and should never be changed.
 	 * @readonly 
 	 */
 	readonly BaseType: "Component" = "Component";
