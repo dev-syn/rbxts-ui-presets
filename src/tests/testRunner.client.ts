@@ -7,7 +7,7 @@ const container: Folder | undefined = resolveInstance("ReplicatedStorage/rbxts_i
 if (container) {
 	// Load all other packages into flamework
 	const discoveredPkgs: string[] = discoverFlameworkPackages(container);
-	discoveredPkgs.forEach(path => Flamework.addPaths(path));
+	// discoveredPkgs.forEach(path => Flamework.addPaths(path));
 	// Load ui-presets into flamework
 	Flamework.addPaths("ReplicatedStorage/ui-presets");
 	Flamework.ignite();
