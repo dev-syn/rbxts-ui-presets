@@ -26,9 +26,7 @@ class UIPresetsService implements OnStart {
 	}
 
 	attachComponent(instance: GuiObject,component: UIComponents) {
-		instance.AddTag()
-	
-		
+		// instance.AddTag()
 	}
 
 	/** Fetches a truly unique identifier. */
