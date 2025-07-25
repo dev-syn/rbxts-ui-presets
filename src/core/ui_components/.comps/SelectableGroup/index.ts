@@ -1,5 +1,4 @@
 import { Signal } from '@rbxts/beacon';
-import Object from '@rbxts/object-utils';
 import UIComponent from '../../';
 import { UIComponents } from '../../../../typings/components';
 import UIPresetsService from '../../../..';
@@ -26,7 +25,9 @@ const rand: Random = new Random();
 /**
  * This class allows you to group TextButton/ImageButton buttons together and allow single or multiple selections between those buttons.
  */
-@Component()
+@Component({
+	tag: 'uipres_component_selectablegroup'
+})
 class SelectableGroup extends UIComponent implements OnStart {
 
 	/** {@inheritDoc Component} */
@@ -82,40 +83,15 @@ class SelectableGroup extends UIComponent implements OnStart {
 		this.SelectionGroup = [];
 		if (group) group.forEach(btn => this.Add(btn));
 	}
+
 	onStart(): void {
-		throw new Error('Method not implemented.');
-	}
-
-	/** Initializes the {@link SelectionGroup}. \*Remember to call this for intended behavior* */
-	Init() {
 		if (this.DefaultSelection) {
-				if (!this.SelectionGroup.includes(this.DefaultSelection)) this.SelectionGroup.push(this.DefaultSelection);
+			if (!this.SelectionGroup.includes(this.DefaultSelection)) this.SelectionGroup.push(this.DefaultSelection);
 
-				// Make the default button selected
-				this.CurrentSelection.push(this.DefaultSelection);
-				this.DefaultSelection.BorderSizePixel = this.Config.borderSize;
+			// Make the default button selected
+			this.CurrentSelection.push(this.DefaultSelection);
+			this.DefaultSelection.BorderSizePixel = this.Config.borderSize;
 		}
-	}
-
-	/**
-	 * Destroys this SelectableGroup clearing all references to the buttons.
-	 */
-	Destroy() {
-		super.Destroy();
-		// Clear all the button references to each button in this group
-		for (const [btn,connections] of Object.entries(this.selectableConnections)) {
-				connections.forEach(conn => conn.Disconnect());
-		}
-		this.selectableConnections.clear();
-
-		this.Config.requireSelection = false;
-		// Reset all of the buttons selection state to none.
-		this.UnselectAll();
-		
-		// Clear all table references
-		this.CurrentSelection.clear();
-		this.SelectionGroup.clear();
-		this.DefaultSelection = undefined;
 	}
 
 	/**
@@ -126,39 +102,35 @@ class SelectableGroup extends UIComponent implements OnStart {
 		const config: SelectableGroupConfig = this.Config;
 
 		if (newSelection) {
-				if (!this.SelectionGroup.includes(newSelection)) {
-						warn(`Could not select new selection since it doesn't exist in the selection group with button name: ${newSelection.Name}`);
-						return;
-				}
-
-				if (this.IsSelected(newSelection)) {
-						warn("Could not select new selection since it already is selected.");
-						return;
-				}
-
-				const prevSelection: Button = this.CurrentSelection[0];
-				if (config.isSingleOnly && prevSelection) {
-						prevSelection.BorderSizePixel = 0;
-						this.CurrentSelection.pop();
-				}
-
-				this.CurrentSelection.push(newSelection);
-				newSelection.BorderSizePixel = this.Config.borderSize;
-				this.SelectionChanged.Fire(prevSelection,newSelection);
+			if (!this.SelectionGroup.includes(newSelection)) {
+				warn(`Could not select new selection since it doesn't exist in the selection group with button name: ${newSelection.Name}`);
+				return;
+			}
+			if (this.IsSelected(newSelection)) {
+				warn("Could not select new selection since it already is selected.");
+				return;
+			}
+			const prevSelection: Button = this.CurrentSelection[0];
+			if (config.isSingleOnly && prevSelection) {
+				prevSelection.BorderSizePixel = 0;
+				this.CurrentSelection.pop();
+			}
+			this.CurrentSelection.push(newSelection);
+			newSelection.BorderSizePixel = this.Config.borderSize;
+			this.SelectionChanged.Fire(prevSelection,newSelection);
 		} else {
 			if (!config.isSingleOnly) {
-					warn("Could not select a non existent selection with multi-selections, use UnselectAll() instead.");
-					return;
+				warn("Could not select a non existent selection with multi-selections, use UnselectAll() instead.");
+				return;
 			}
-
 			const selectionsSize: number = this.CurrentSelection.size();
 			if (selectionsSize === 0) {
-					warn("Could not remove selection from selection group no selection is present.");
-					return;
+				warn("Could not remove selection from selection group no selection is present.");
+				return;
 			}
 			if (config.requireSelection && selectionsSize === 1) {
-					warn("Could not remove selection from selection group; since a selection is required.");
-					return;
+				warn("Could not remove selection from selection group; since a selection is required.");
+				return;
 			}
 
 			const prevSelection: Button = this.CurrentSelection[0];
@@ -168,180 +140,168 @@ class SelectableGroup extends UIComponent implements OnStart {
 		}
 	}
 
-    /** Adds a button to the {@link SelectableGroup}. */
-    Add(button: Button) {
+	/** Adds a button to the {@link SelectableGroup}. */
+	Add(button: Button) {
+		// Check if this button is already in this SelectableGroup
+		if (this.SelectionGroup.includes(button)) return;
+		this.SelectionGroup.push(button);
 
-        // Check if this button is already in this SelectableGroup
-        if (this.SelectionGroup.includes(button)) return;
+		button.BorderColor3 = this.Config.borderColor;
 
-        this.SelectionGroup.push(button);
+		let selectableConnections: RBXScriptConnection[] | undefined = this.selectableConnections.get(button);
+		if (!selectableConnections) {
+				selectableConnections = [];
+				this.selectableConnections.set(button,selectableConnections);
+		}
 
-        button.BorderColor3 = this.Config.borderColor;
+		// When the button is destroyed remove any references to that button
+		selectableConnections.push(
+				button.Destroying.Connect(() => {
+					const btnSelectionIndex: number = this.CurrentSelection.indexOf(button);
+					if (btnSelectionIndex !== -1) this.CurrentSelection.remove(btnSelectionIndex);
 
-        let selectableConnections: RBXScriptConnection[] | undefined = this.selectableConnections.get(button);
-        if (!selectableConnections) {
-            selectableConnections = [];
-            this.selectableConnections.set(button,selectableConnections);
-        }
+					const btnGroupIndex: number = this.SelectionGroup.indexOf(button);
+					if (btnGroupIndex !== -1) this.SelectionGroup.remove(btnGroupIndex);
+				})
+		);
 
-        // When the button is destroyed remove any references to that button
-        selectableConnections.push(
-            button.Destroying.Connect(() => {
-                const btnSelectionIndex: number = this.CurrentSelection.indexOf(button);
-                if (btnSelectionIndex !== -1) this.CurrentSelection.remove(btnSelectionIndex);
+		const borderSize: number = this.Config.borderSize;
+		
+		selectableConnections.push(
+			button.MouseButton1Click.Connect(() => {
+				// If only one button can be selected at a time
+				if (this.Config.isSingleOnly) {
+					// If this is the only selection that is being toggled; remove this selection
+					if (this.CurrentSelection[0] === button) {
+						// If a selection is required and this is the only selection; return
+						if (this.Config.requireSelection) return;
 
-                const btnGroupIndex: number = this.SelectionGroup.indexOf(button);
-                if (btnGroupIndex !== -1) this.SelectionGroup.remove(btnGroupIndex);
-            })
-        );
+						const prevSelection: Button = this.CurrentSelection[0];
 
-        const borderSize: number = this.Config.borderSize;
-        
-        selectableConnections.push(
-            button.MouseButton1Click.Connect(() => {
+						// Unselect the current button
+						prevSelection.BorderSizePixel = 0;
+						this.CurrentSelection.remove(0);
 
-                // If only one button can be selected at a time
-                if (this.Config.isSingleOnly) {
+						this.SelectionChanged.Fire(prevSelection,undefined);
+					}
+					// Otherwise remove the previous selection and select this button
+					else {
+						const prevSelection: Button = this.CurrentSelection[0];
+						if (prevSelection) {
+							// Unselect the current button and select this button
+							prevSelection.BorderSizePixel = 0;
+							this.CurrentSelection.remove(0);
+						}
+						this.CurrentSelection.push(button);
+						button.BorderSizePixel = borderSize;
+						this.SelectionChanged.Fire(prevSelection,button);
+					}
+				} else { // Otherwise multiple buttons can be selected at a time
+					const btnIndex: number = this.CurrentSelection.indexOf(button);
+					// Check if this btn is already selected
+					if (btnIndex !== -1) {
+						// If a selection is required and this is the last button selected; return
+						if (this.Config.requireSelection && this.CurrentSelection.size() === 1) return;
 
-                    // If this is the only selection that is being toggled; remove this selection
-                    if (this.CurrentSelection[0] === button) {
-                        // If a selection is required and this is the only selection; return
-                        if (this.Config.requireSelection) return;
+						const prevSelection: Button = this.CurrentSelection[0];
+						prevSelection.BorderSizePixel = 0;
+						this.CurrentSelection.remove(btnIndex);
+						this.SelectionChanged.Fire(prevSelection,undefined);
+					} else {
+						this.CurrentSelection.push(button);
+						button.BorderSizePixel = borderSize;
+						this.SelectionChanged.Fire(undefined,button);
+					}
+				}
+			})
+		);
+	}
 
-                        const prevSelection: Button = this.CurrentSelection[0];
+	/** Removes a button from the {@link SelectableGroup}. */
+	Remove(button: Button,force: boolean = false) {
+		const btnGroupIndex: number = this.SelectionGroup.indexOf(button);
+		// Check if this button is not in this SelectableGroup
+		if (btnGroupIndex === -1) return;
 
-                        // Unselect the current button
-                        prevSelection.BorderSizePixel = 0;
-                        this.CurrentSelection.remove(0);
+		const btnSelectionIndex: number = this.CurrentSelection.indexOf(button);
+		if (btnSelectionIndex !== -1) {
+			// This button is currently selected
 
-                        this.SelectionChanged.Fire(prevSelection,undefined);
-                    }
-                    // Otherwise remove the previous selection and select this button
-                    else {
-                        const prevSelection: Button = this.CurrentSelection[0];
-                        if (prevSelection) {
-                            // Unselect the current button and select this button
-                            prevSelection.BorderSizePixel = 0;
-                            this.CurrentSelection.remove(0);
-                        }
+			// If this SelectableGroup requires a selection and there is only one without force specified; return
+			if (this.Config.requireSelection && this.CurrentSelection.size() === 1 && !force) return;
 
-                        this.CurrentSelection.push(button);
-                        button.BorderSizePixel = borderSize;
-                        this.SelectionChanged.Fire(prevSelection,button);
-                    }
-                }
+			this.CurrentSelection.remove(btnSelectionIndex);
+		}
 
-                // Otherwise multiple buttons can be selected at a time
-                else {
+		// Remove connections for this button
+		this.removeButtonConnections(button);
+		this.SelectionGroup.remove(btnGroupIndex);
+		button.BorderSizePixel = 0;
+	}
 
-                    // Check if this btn is already selected
-                    const btnIndex: number = this.CurrentSelection.indexOf(button);
-                    if (btnIndex !== -1) {
-                        // If a selection is required and this is the last button selected; return
-                        if (this.Config.requireSelection && this.CurrentSelection.size() === 1) return;
+	/**
+	 * Selects all the buttons when Config.isSingleOnly is false.
+	 * @returns void
+	 */
+	SelectAll(): void {
+		if (this.SelectionGroup.size() === 0) return;
+		// Only allow selecting all on multi' selections
+		if (this.Config.isSingleOnly) return;
 
-                        const prevSelection: Button = this.CurrentSelection[0];
-                        prevSelection.BorderSizePixel = 0;
-                        this.CurrentSelection.remove(btnIndex);
-                        this.SelectionChanged.Fire(prevSelection,undefined);
-                    } else {
-                        this.CurrentSelection.push(button);
-                        button.BorderSizePixel = borderSize;
-                        this.SelectionChanged.Fire(undefined,button);
-                    }
-                }
+		const borderSize: number = this.Config.borderSize;
+		for (const btn of this.SelectionGroup) {
+			const btnIndex: number = this.CurrentSelection.indexOf(btn);
+			if (btnIndex !== -1) continue;
 
-            })
-        );
-    }
+			this.CurrentSelection.push(btn);
+			btn.BorderSizePixel = borderSize;
+		}
+	}
 
-    /** Removes a button from the {@link SelectableGroup}. */
-    Remove(button: Button,force: boolean = false) {
-        const btnGroupIndex: number = this.SelectionGroup.indexOf(button);
+	/** Unselects all the buttons unless Config.requireSelection is true in which case the default or a random button will be selected.
+	 * WARNING: A heads up is that this method does not fire the {@link SelectableGroup.SelectionChanged} event.
+	 */
+	UnselectAll(): void {
+		const groupSize: number = this.SelectionGroup.size();
+		if (groupSize === 0) return;
 
-        // Check if this button is not in this SelectableGroup
-        if (btnGroupIndex === -1) return;
+		if (this.Config.requireSelection) {
+			const reservedButton: Button = this.DefaultSelection || this.SelectionGroup[rand.NextInteger(1,groupSize)];
 
-        // Check if this button is selected
-        const btnSelectionIndex: number = this.CurrentSelection.indexOf(button);
-        if (btnSelectionIndex !== -1) {
-            // This button is currently selected
+			for (let btnIndex = 0; btnIndex < groupSize; btnIndex++) {
+				const button: Button = this.SelectionGroup[btnIndex];
 
-            // If this SelectableGroup requires a selection and there is only one without force specified; return
-            if (this.Config.requireSelection && this.CurrentSelection.size() === 1 && !force) return;
+				// If this is the reserved button do not unselect it
+				if (button === reservedButton) continue;
 
-            this.CurrentSelection.remove(btnSelectionIndex);
-        }
+				const btnSelectionIndex: number = this.CurrentSelection.indexOf(button);
+				this.CurrentSelection.unorderedRemove(btnSelectionIndex);
+			}
+		} else {
+			for (let btnIndex = 0; btnIndex < groupSize; btnIndex++) {
+				const button: Button = this.SelectionGroup[btnIndex];
 
-        // Remove connections for this button
-        this.removeButtonConnections(button);
-        this.SelectionGroup.remove(btnGroupIndex);
-        button.BorderSizePixel = 0;
-    }
+				const btnSelectionIndex: number = this.CurrentSelection.indexOf(button);
+				this.CurrentSelection.unorderedRemove(btnSelectionIndex);
+			}
+		}
+	}
 
-    /**
-     * Selects all the buttons when Config.isSingleOnly is false.
-     * @returns void
-     */
-    SelectAll(): void {
-        if (this.SelectionGroup.size() === 0) return;
+	/**
+	 * Checks if a button is selected or not.
+	 * @param btn - The button to check if it's selected
+	 * @returns - A boolean which is true if it is selected otherwise false
+	 */
+	IsSelected(btn: Button): boolean { return this.CurrentSelection.includes(btn); }
 
-        // Only allow selecting all on multi' selections
-        if (this.Config.isSingleOnly) return;
+	/** Removes the RBXScriptConnection connections from the given button. */
+	private removeButtonConnections(button: Button) {
+		const selectableConnections: RBXScriptConnection[] | undefined = this.selectableConnections.get(button);
+		if (!selectableConnections) return;
 
-        const borderSize: number = this.Config.borderSize;
-        for (const btn of this.SelectionGroup) {
-            const btnIndex: number = this.CurrentSelection.indexOf(btn);
-            if (btnIndex !== -1) continue;
-
-            this.CurrentSelection.push(btn);
-            btn.BorderSizePixel = borderSize;
-        }
-    }
-
-    /** Unselects all the buttons unless Config.requireSelection is true in which case the default or a random button will be selected.
-     * WARNING: A heads up is that this method does not fire the {@link SelectableGroup.SelectionChanged} event. */
-    UnselectAll(): void {
-        const groupSize: number = this.SelectionGroup.size();
-        if (groupSize === 0) return;
-
-        if (this.Config.requireSelection) {
-            const reservedButton: Button = this.DefaultSelection || this.SelectionGroup[rand.NextInteger(1,groupSize)];
-
-            for (let btnIndex = 0; btnIndex < groupSize; btnIndex++) {
-                const button: Button = this.SelectionGroup[btnIndex];
-
-                // If this is the reserved button do not unselect it
-                if (button === reservedButton) continue;
-
-                const btnSelectionIndex: number = this.CurrentSelection.indexOf(button);
-                this.CurrentSelection.unorderedRemove(btnSelectionIndex);
-            }
-        } else {
-            for (let btnIndex = 0; btnIndex < groupSize; btnIndex++) {
-                const button: Button = this.SelectionGroup[btnIndex];
-
-                const btnSelectionIndex: number = this.CurrentSelection.indexOf(button);
-                this.CurrentSelection.unorderedRemove(btnSelectionIndex);
-            }
-        }
-    }
-
-    /**
-     * Checks if a button is selected or not.
-     * @param btn - The button to check if it's selected
-     * @returns - A boolean which is true if it is selected otherwise false
-     */
-    IsSelected(btn: Button): boolean { return this.CurrentSelection.includes(btn); }
-
-    /** Removes the RBXScriptConnection connections from the given button. */
-    private removeButtonConnections(button: Button) {
-        const selectableConnections: RBXScriptConnection[] | undefined = this.selectableConnections.get(button);
-        if (!selectableConnections) return;
-
-        selectableConnections.forEach(conn => conn.Disconnect());
-        this.selectableConnections.delete(button);
-    }
+		selectableConnections.forEach(conn => conn.Disconnect());
+		this.selectableConnections.delete(button);
+	}
 }
 
 export { SelectableGroup, SelectableGroupConfig };

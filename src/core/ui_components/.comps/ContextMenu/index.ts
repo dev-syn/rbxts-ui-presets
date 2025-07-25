@@ -165,7 +165,9 @@ interface MenuOptions {
 	textSizingMode: TextSizingMode;
 }
 
-@Component()
+@Component({
+	tag: 'uipres_component_contextmenu'
+})
 class ContextMenu extends UIComponent<{},Button> implements OnStart {
 // #region CLASS_STATIC
 	static contextMenuSG: ScreenGui = new Instance("ScreenGui");
@@ -286,8 +288,7 @@ class ContextMenu extends UIComponent<{},Button> implements OnStart {
 	/**
 	 * Destroys this ContextMenu object.
 	 */
-	Destroy() {
-			super.Destroy();
+	override Destroy(): void {
 			// Destroy each ContextItem
 			this._contexts.forEach(item => item.Destroy());
 
@@ -298,6 +299,7 @@ class ContextMenu extends UIComponent<{},Button> implements OnStart {
 			this.menuBG.Destroy();
 			this.menuBG.Parent = undefined;
 			if (ContextMenu._previousMenu === this) ContextMenu._previousMenu = undefined;
+			super.Destroy();
 	}
 // #endregion
 

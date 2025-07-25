@@ -1,11 +1,10 @@
-import { t } from '@rbxts/t';
 import { UIPresetsConfig } from '../../../../UIPresetsConfig';
 import { BoundCheck } from '../BoundCheck';
 import UIComponent from '../..';
 import { UIComponents } from '../../../../typings/components';
 import type UIPresetsService from '../../../..';
 import { OnStart } from '@flamework/core';
-import { Components } from '@flamework/components';
+import { Component } from '@flamework/components';
 
 const TextService: TextService = game.GetService('TextService');
 const UserInputService: UserInputService = game.GetService('UserInputService');
@@ -19,10 +18,12 @@ interface ToolTipOptions {
 /**
  * This is a component that will create a ToolTip near the target element.
  */
+@Component({
+	tag: 'uipres_component_tooltip'
+})
 class ToolTip extends UIComponent<{},TextLabel> implements OnStart {
 
 	private static _tooltipSG: ScreenGui = new Instance("ScreenGui");
-
 	static {
 		this._tooltipSG.Name = "UIPresets_ToolTip";
 		this._tooltipSG.IgnoreGuiInset = true;
@@ -46,11 +47,14 @@ class ToolTip extends UIComponent<{},TextLabel> implements OnStart {
 	};
 
 	Name: string;
+
 	/** The text that will be displayed within the {@link ToolTip}. */
 	Text: string;
+
 	/** The size of the text that will be displayed. */
 	TextSize: number = 18;
 
+	declare readonly UUID;
 	/**
 	 * The absolute size of the {@link ToolTip} TextLabel.
 	 * @private
@@ -68,7 +72,8 @@ class ToolTip extends UIComponent<{},TextLabel> implements OnStart {
 		name: string,
 		text: string
 	) {
-		super(uiPresetsService.fetchNewUUID());
+		super();
+		this.UUID = uiPresetsService.fetchNewUUID();
 		this.Name = name;
 		this.Text = text;
 	}

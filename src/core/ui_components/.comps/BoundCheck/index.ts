@@ -72,7 +72,9 @@ class BoundsLayout {
 /**
  * This is a UIPresets component that checks if the mouse is within a UI element bounds.
  */
-@Component()
+@Component({
+	tag: 'uipres_component_boundcheck'
+})
 class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	private static _boundChecks: Map<BoundCheck,true | undefined> = new Map();
 	
@@ -114,7 +116,7 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	/** The ancestor ScreenGui which is used for internal positioning and sizing checks. */
 	private _ancestorSG: ScreenGui | undefined;
 	private _destroyingConnection?: RBXScriptConnection;
-
+	
 	/**
 	 * Constructs a new BoundCheck object.
 	 * @param activeOnStart Whether this BoundCheck should be active when this BoundCheck is created. Default(true)
@@ -130,25 +132,25 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 		BoundCheck._boundChecks.set(this,true);
 	}
 
-	override Destroy() {
-			super.Destroy();
-			this.Active = false;
-			BoundCheck._boundChecks.delete(this);
+	override Destroy(): void {
+		this.Active = false;
+		BoundCheck._boundChecks.delete(this);
 
-			if (this._destroyingConnection) {
-					this._destroyingConnection.Disconnect();
-					this._destroyingConnection = undefined;
-			}
+		if (this._destroyingConnection) {
+			this._destroyingConnection.Disconnect();
+			this._destroyingConnection = undefined;
+		}
 
-			// Clean up signal events
-			if (this.BoundEnter) {
-					this.BoundEnter.Destroy();
-					this.BoundEnter = undefined!;
-			}
-			if (this.BoundExit) {
-					this.BoundExit.Destroy();
-					this.BoundExit = undefined!;
-			}
+		// Clean up signal events
+		if (this.BoundEnter) {
+			this.BoundEnter.Destroy();
+			this.BoundEnter = undefined!;
+		}
+		if (this.BoundExit) {
+			this.BoundExit.Destroy();
+			this.BoundExit = undefined!;
+		}
+		super.Destroy();
 	}
 
 	/** Returns true if within bounds; otherwise false. */
@@ -164,8 +166,8 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 
 		if (!this.instance) return false;
 		if (this.Options.ConsiderVisibility && !owner.Visible) {
-				print("Not visible")
-				return false;
+			print("Not visible")
+			return false;
 		}
 		if (!this._ancestorSG) this._ancestorSG = owner.FindFirstAncestorWhichIsA("ScreenGui");
 
@@ -173,9 +175,9 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 		if (!mousePos) return false;
 
 		if (this.Options.TopMostOnly) {
-				const uis: GuiObject[] = PlayerGui.GetGuiObjectsAtPosition(mousePos.X,mousePos.Y);
-				if (uis.size() === 0) return false;
-				if (uis[0] !== owner) return false;
+			const uis: GuiObject[] = PlayerGui.GetGuiObjectsAtPosition(mousePos.X,mousePos.Y);
+			if (uis.size() === 0) return false;
+			if (uis[0] !== owner) return false;
 		}
 
 		const absXSize: number = owner.AbsoluteSize.X;
@@ -201,29 +203,28 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 		const withinBounds: boolean = withinX && withinY;
 
 		this.Bounds = new BoundsLayout(
-				newCoord(leftAbsX,topAbsY),
-				newCoord(rightAbsX,topAbsY),
-				newCoord(leftAbsX,bottomAbsY),
-				newCoord(rightAbsX,bottomAbsY),
-				newCoord(absXSize,absYSize)
+			newCoord(leftAbsX,topAbsY),
+			newCoord(rightAbsX,topAbsY),
+			newCoord(leftAbsX,bottomAbsY),
+			newCoord(rightAbsX,bottomAbsY),
+			newCoord(absXSize,absYSize)
 		);
 
 		// If not within bounds mark as leaving bounds
 		if (!withinBounds) {
 			if (this._withinBounds) {
-					this._withinBounds = false;
-					this.BoundExit.Fire();
+				this._withinBounds = false;
+				this.BoundExit.Fire();
 			}
 			return false;
 		} else {
 			// Mark if not already marked as in bounds
 			if (!this._withinBounds) {
-					this._withinBounds = true;
-					this.BoundEnter.Fire();
+				this._withinBounds = true;
+				this.BoundEnter.Fire();
 			}
 			return true;
 		}
-
 	}
 }
 
