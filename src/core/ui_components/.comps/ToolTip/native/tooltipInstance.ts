@@ -1,3 +1,0 @@
-function tooltipInstance() {
-	return null;
-}
