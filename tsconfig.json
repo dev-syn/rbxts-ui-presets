@@ -18,7 +18,7 @@
 		"typeRoots": ["node_modules/@rbxts","node_modules/@flamework","src/typings"],
 		"declaration": true,
 		// configurable
-		"declarationDir": "src/typings/generated",
+		"declarationDir": "out/typings/generated",
 		"rootDir": "src",
 		"outDir": "out",
 		"baseUrl": "./src",
