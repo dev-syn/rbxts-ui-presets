@@ -5,3 +5,4 @@ flamework.build
 *.tsbuildinfo
 debug.log
 sourcemap.json
+testPlace.rbxlx
