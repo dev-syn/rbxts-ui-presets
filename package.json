@@ -21,9 +21,10 @@
   },
   "scripts": {
     "prepublishOnly": "npm run build",
-    "build": "rbxtsc",
-		"build:test": "rbxtsc -p test.project.json",
-		"watch:test": "rbxtsc -w -p test.project.json",
+    "build": "rbxtsc --type package",
+		"build:test": "rbxtsc --rojo test.project.json --type game",
+		"build:rojo": "rojo build test.project.json -o testPlace.rbxlx",
+		"watch:test": "rbxtsc -w --rojo test.project.json --type game",
 		"test": "npm run build:test && rojo build test.project.json -o ui-presets.test.rbxl",
     "update:flamework": "npm i @flamework/core@latest && npm i -D rbxts-transformer-flamework@latest"
   },
