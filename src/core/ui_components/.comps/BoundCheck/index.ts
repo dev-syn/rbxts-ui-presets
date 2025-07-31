@@ -102,7 +102,7 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	/** Whether this BoundCheck is actively checking for bound interactions. */
 	Active: boolean = true;
 	/** This stores the data of the bounds you can access the corner coord abs' positions and the size of the bounds. */
-	Bounds: BoundsLayout;
+	readonly Bounds: BoundsLayout;
 	/** A signal that is called when the bounds is entered. */
 	BoundEnter: Signal<void> = new Signal();
 	/** A signal that is called when the bounds is exited. */
