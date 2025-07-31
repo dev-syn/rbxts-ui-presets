@@ -10,14 +10,14 @@ type Button = TextButton | ImageButton;
 
 /** The SelectableGroupConfig is a configurable set of options that changes the default behavior. */
 interface SelectableGroupConfig {
-    /** Whether only a single selection can be made or multiple. */
-    isSingleOnly: boolean;
-    /** Whether a selection is required or no selection can be present. */
-    requireSelection: boolean;
-    /** The button border color that is assigned during SelectableGroup.Init(). */
-    borderColor: Color3;
-    /** The button border size when the button is selected. */
-    borderSize: number;
+	/** Whether only a single selection can be made or multiple. */
+	isSingleOnly: boolean;
+	/** Whether a selection is required or no selection can be present. */
+	requireSelection: boolean;
+	/** The button border color that is assigned during SelectableGroup.Init(). */
+	borderColor: Color3;
+	/** The button border size when the button is selected. */
+	borderSize: number;
 }
 
 const rand: Random = new Random();
@@ -150,19 +150,19 @@ class SelectableGroup extends UIComponent implements OnStart {
 
 		let selectableConnections: RBXScriptConnection[] | undefined = this.selectableConnections.get(button);
 		if (!selectableConnections) {
-				selectableConnections = [];
-				this.selectableConnections.set(button,selectableConnections);
+			selectableConnections = [];
+			this.selectableConnections.set(button,selectableConnections);
 		}
 
 		// When the button is destroyed remove any references to that button
 		selectableConnections.push(
-				button.Destroying.Connect(() => {
-					const btnSelectionIndex: number = this.CurrentSelection.indexOf(button);
-					if (btnSelectionIndex !== -1) this.CurrentSelection.remove(btnSelectionIndex);
+			button.Destroying.Connect(() => {
+				const btnSelectionIndex: number = this.CurrentSelection.indexOf(button);
+				if (btnSelectionIndex !== -1) this.CurrentSelection.remove(btnSelectionIndex);
 
-					const btnGroupIndex: number = this.SelectionGroup.indexOf(button);
-					if (btnGroupIndex !== -1) this.SelectionGroup.remove(btnGroupIndex);
-				})
+				const btnGroupIndex: number = this.SelectionGroup.indexOf(button);
+				if (btnGroupIndex !== -1) this.SelectionGroup.remove(btnGroupIndex);
+			})
 		);
 
 		const borderSize: number = this.Config.borderSize;

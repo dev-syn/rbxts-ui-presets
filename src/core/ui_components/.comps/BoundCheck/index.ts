@@ -5,6 +5,7 @@ import type { UIComponents } from '../../../../typings/components';
 import { Component } from '@flamework/components';
 import type UIPresetsService from '../../../../';
 import { OnStart } from '@flamework/core';
+import Object from '@rbxts/object-utils';
 
 /** A table of configurable options that change the default behavior of {@link BoundCheck}. */
 interface BoundCheckOptions {
@@ -27,11 +28,12 @@ const PlayerGui: PlayerGui = Players.LocalPlayer.WaitForChild("PlayerGui") as Pl
 function newCoord(x: number = 0,y: number = 0): BoundCoord { return { X: x, Y: y }; } 
 
 /**
- * This stores the bounds layout of a {@link BoundCheck} object.
+ * A class for storing the bounds data for the BoundCheck object.
  */
 class BoundsLayout {
 
-	static empty: BoundsLayout;
+	/** An object that would be an empty BoundsLayout. Remember to copy this object and shouldn't be mutated. */
+	static readonly empty: BoundsLayout = new BoundsLayout(newCoord(0,0),newCoord(0,0),newCoord(0,0),newCoord(0,0),newCoord(0,0));
 
 	static __tostring = (lay: BoundsLayout) => {
 		return `{
@@ -60,13 +62,12 @@ class BoundsLayout {
 	Size: BoundCoord = { X: 0, Y: 0 };
 
 	constructor(c1: BoundCoord,c2: BoundCoord,c3: BoundCoord,c4: BoundCoord,size: BoundCoord) {
-		if (c1 && c2 && c3 && c4 && size) {
-			this.C1 = c1;
-			this.C2 = c2;
-			this.C3 = c3;
-			this.C4 = c4;
-			this.Size = size;
-		} else error("Invalid parameters for BoundsLayout constructor");
+		assert(!c1 || !c2 || !c3 || !c4 || !size,"Invalid parameters for BoundsLayout constructor");
+		this.C1 = c1;
+		this.C2 = c2;
+		this.C3 = c3;
+		this.C4 = c4;
+		this.Size = size;
 	}
 }
 
@@ -127,12 +128,13 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	) {
 		super();
 		this.UUID = uiPresetsService.fetchNewUUID();
-		
+		this.Bounds = Object.assign({},BoundsLayout.empty);
 	}
 
 	onStart(): void {
-		BoundCheck._boundChecks.set(this,true);
+		// Query the instance for it's bounds
 		this.Query();
+		BoundCheck._boundChecks.set(this,true);
 	}
 
 	override Destroy(): void {
@@ -205,13 +207,21 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 
 		const withinBounds: boolean = withinX && withinY;
 
-		this.Bounds = new BoundsLayout(
-			newCoord(leftAbsX,topAbsY),
-			newCoord(rightAbsX,topAbsY),
-			newCoord(leftAbsX,bottomAbsY),
-			newCoord(rightAbsX,bottomAbsY),
-			newCoord(absXSize,absYSize)
-		);
+		// Corner 1 point
+		this.Bounds.C1.X = leftAbsX;
+		this.Bounds.C1.Y = topAbsY;
+		// Corner 2 point
+		this.Bounds.C2.X = rightAbsX;
+		this.Bounds.C2.Y = topAbsY;
+		// Corner 3 point
+		this.Bounds.C3.X = leftAbsX;
+		this.Bounds.C3.Y = bottomAbsY;
+		// Corner 4 point
+		this.Bounds.C4.X = rightAbsX;
+		this.Bounds.C4.Y = bottomAbsY;
+		// BoundCheck size
+		this.Bounds.Size.X = absXSize;
+		this.Bounds.Size.Y = absYSize;
 
 		// If not within bounds mark as leaving bounds
 		if (!withinBounds) {
