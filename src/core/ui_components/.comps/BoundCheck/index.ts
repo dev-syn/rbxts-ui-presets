@@ -31,42 +31,43 @@ function newCoord(x: number = 0,y: number = 0): BoundCoord { return { X: x, Y: y
  */
 class BoundsLayout {
 
-    static __tostring = (lay: BoundsLayout) => {
-        return `{
-            C1(X: ${lay.C1.X}, Y: ${lay.C1.Y}),
-            C2(X: ${lay.C2.X}, Y: ${lay.C2.Y}),
-            C3(X: ${lay.C3.X}, Y: ${lay.C3.Y}),
-            C4(X: ${lay.C4.X}, Y: ${lay.C4.Y}),
+	static empty: BoundsLayout;
 
-            Size(X: ${lay.Size.X}, Y: ${lay.Size.Y})
-        }`
-    }
+	static __tostring = (lay: BoundsLayout) => {
+		return `{
+				C1(X: ${lay.C1.X}, Y: ${lay.C1.Y}),
+				C2(X: ${lay.C2.X}, Y: ${lay.C2.Y}),
+				C3(X: ${lay.C3.X}, Y: ${lay.C3.Y}),
+				C4(X: ${lay.C4.X}, Y: ${lay.C4.Y}),
 
-    /** The ClassName which is 'BoundsLayout'. */
-    ClassName: "BoundsLayout" = "BoundsLayout";
+				Size(X: ${lay.Size.X}, Y: ${lay.Size.Y})
+		}`
+	}
 
-    /** The absolute top left position coords of this bounds. */
-    C1: BoundCoord = { X: 0, Y: 0 };
-    /** The absolute top right position coords of this bounds. */
-    C2: BoundCoord = { X: 0, Y: 0 };
-    /** The absolute bottom left position coords of this bounds. */
-    C3: BoundCoord = { X: 0, Y: 0 };
-    /** The absolute bottom right position coords of this bounds. */
-    C4: BoundCoord = { X: 0, Y: 0 };
+	/** The ClassName which is 'BoundsLayout'. */
+	ClassName: "BoundsLayout" = "BoundsLayout";
 
-    /** The size of this bounds. */
-    Size: BoundCoord = { X: 0, Y: 0 };
+	/** The absolute top left position coords of this bounds. */
+	C1: BoundCoord = { X: 0, Y: 0 };
+	/** The absolute top right position coords of this bounds. */
+	C2: BoundCoord = { X: 0, Y: 0 };
+	/** The absolute bottom left position coords of this bounds. */
+	C3: BoundCoord = { X: 0, Y: 0 };
+	/** The absolute bottom right position coords of this bounds. */
+	C4: BoundCoord = { X: 0, Y: 0 };
 
-    constructor(c1: BoundCoord,c2: BoundCoord,c3: BoundCoord,c4: BoundCoord,size: BoundCoord) {
-				if (c1 && c2 && c3 && c4 && size) {
-					this.C1 = c1;
-					this.C2 = c2;
-					this.C3 = c3;
-					this.C4 = c4;
-					this.Size = size;
-				} else error("Invalid parameters for BoundsLayout constructor");
-    }
+	/** The size of this bounds. */
+	Size: BoundCoord = { X: 0, Y: 0 };
 
+	constructor(c1: BoundCoord,c2: BoundCoord,c3: BoundCoord,c4: BoundCoord,size: BoundCoord) {
+		if (c1 && c2 && c3 && c4 && size) {
+			this.C1 = c1;
+			this.C2 = c2;
+			this.C3 = c3;
+			this.C4 = c4;
+			this.Size = size;
+		} else error("Invalid parameters for BoundsLayout constructor");
+	}
 }
 
 /**
@@ -79,15 +80,15 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	private static _boundChecks: Map<BoundCheck,true | undefined> = new Map();
 	
 	static {
-			RunService.BindToRenderStep("UIPresets_BoundCheck",Enum.RenderPriority.Input.Value + 5,() => {
+		RunService.BindToRenderStep("UIPresets_BoundCheck",Enum.RenderPriority.Input.Value + 5,() => {
 
-					for (const [boundCheck,_] of this._boundChecks) {
-							if (!boundCheck.Active) continue;
+			for (const [boundCheck,_] of this._boundChecks) {
+					if (!boundCheck.Active) continue;
 
-							boundCheck.Query();
-					}
+					boundCheck.Query();
+			}
 
-			});
+		});
 	}
 
 	/** {@inheritDoc components/index} */
@@ -100,7 +101,7 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	/** Whether this BoundCheck is actively checking for bound interactions. */
 	Active: boolean = true;
 	/** This stores the data of the bounds you can access the corner coord abs' positions and the size of the bounds. */
-	Bounds!: BoundsLayout;
+	Bounds: BoundsLayout;
 	/** A signal that is called when the bounds is entered. */
 	BoundEnter: Signal<void> = new Signal();
 	/** A signal that is called when the bounds is exited. */
@@ -126,10 +127,12 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	) {
 		super();
 		this.UUID = uiPresetsService.fetchNewUUID();
+		
 	}
 
 	onStart(): void {
 		BoundCheck._boundChecks.set(this,true);
+		this.Query();
 	}
 
 	override Destroy(): void {
