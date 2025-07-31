@@ -167,14 +167,21 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	 * @internal
 	 */
 	Query(): boolean {
+		if (!this.instance) return false;
 		const owner = this.instance;
 
-		if (!this.instance) return false;
 		if (this.Options.ConsiderVisibility && !owner.Visible) {
 			print("Not visible")
 			return false;
 		}
-		if (!this._ancestorSG) this._ancestorSG = owner.FindFirstAncestorWhichIsA("ScreenGui");
+		if (!this._ancestorSG) {
+			this._ancestorSG = owner.FindFirstAncestorWhichIsA("ScreenGui");
+			// We need to verify that it exists, after our search.
+			if (!this._ancestorSG) {
+				warn("A ScreenGui ancestor must exist for BoundChecks position checks, so no bounds will be queried.");
+				return false;
+			}
+		} 
 
 		const mousePos: Vector2 | undefined = UserInputService.GetMouseLocation();
 		if (!mousePos) return false;
