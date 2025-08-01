@@ -1,9 +1,11 @@
-import { Controller, OnStart } from '@flamework/core';
+import { Controller, Dependency, OnStart } from '@flamework/core';
 import Component from './core/ui_components';
 import { RunService } from '@rbxts/services';
 import { UUID } from './typings';
 import { Signal } from '@rbxts/beacon';
-import ComponentType from './core/ui_components/ComponentType';
+import ComponentType from './core/ui_components/ComponentTag';
+import PresetType from './core/presets/PresetTag';
+import { Components } from '@flamework/components';
 
 interface SharedDefaultAttributes {
 	UUID: UUID;
@@ -51,8 +53,16 @@ class UIPresetsService implements OnStart {
 		this.HighestUIOrder = this.fetchHighestUIOrder();
 	}
 
-	attachComponent(instance: GuiObject,component: ComponentType): void
-	{ instance.AddTag(component); }
+	async attachComponent<T extends UIComponent = UIComponent>(instance: GuiObject,component: ComponentType): Promise<T> {
+		instance.AddTag(component);
+
+		const components = Dependency<Components>();
+		return components.waitForComponent<T>(instance);
+	}
+
+	attachPreset(preset: PresetType): void {
+
+	}
 
 	/** Fetches a truly unique identifier. */
 	fetchNewUUID(): string {
