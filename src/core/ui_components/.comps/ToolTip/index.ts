@@ -5,6 +5,7 @@ import { UIComponents } from '../../../../typings/components';
 import type UIPresetsService from '../../../..';
 import { OnStart } from '@flamework/core';
 import { Component } from '@flamework/components';
+import ComponentType from '../../ComponentType';
 
 const TextService: TextService = game.GetService('TextService');
 const UserInputService: UserInputService = game.GetService('UserInputService');
@@ -19,7 +20,7 @@ interface ToolTipOptions {
  * This is a component that will create a ToolTip near the target element.
  */
 @Component({
-	tag: 'uipres_component_tooltip'
+	tag: ComponentType.ToolTip
 })
 class ToolTip extends UIComponent<{},TextLabel> implements OnStart {
 

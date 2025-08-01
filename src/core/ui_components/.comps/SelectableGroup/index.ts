@@ -5,6 +5,7 @@ import UIPresetsService from '../../../..';
 import { Component } from '@flamework/components';
 import { OnStart } from '@flamework/core';
 import { UUID } from '../../../../typings';
+import ComponentType from '../../ComponentType';
 
 type Button = TextButton | ImageButton;
 
@@ -26,7 +27,7 @@ const rand: Random = new Random();
  * This class allows you to group TextButton/ImageButton buttons together and allow single or multiple selections between those buttons.
  */
 @Component({
-	tag: 'uipres_component_selectablegroup'
+	tag: ComponentType.SelectableGroup
 })
 class SelectableGroup extends UIComponent implements OnStart {
 

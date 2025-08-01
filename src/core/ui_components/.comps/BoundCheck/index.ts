@@ -6,6 +6,7 @@ import { Component } from '@flamework/components';
 import type UIPresetsService from '../../../../';
 import { OnStart } from '@flamework/core';
 import Object from '@rbxts/object-utils';
+import ComponentType from '../../ComponentType';
 
 /** A table of configurable options that change the default behavior of {@link BoundCheck}. */
 interface BoundCheckOptions {
@@ -75,7 +76,7 @@ class BoundsLayout {
  * This is a UIPresets component that checks if the mouse is within a UI element bounds.
  */
 @Component({
-	tag: 'uipres_component_boundcheck'
+	tag: ComponentType.BoundCheck
 })
 class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	private static _boundChecks: Map<BoundCheck,true | undefined> = new Map();

@@ -6,6 +6,7 @@ import { Component } from '@flamework/components';
 import type UIPresetsService from '../../../..';
 import { OnStart } from '@flamework/core';
 import { UUID } from '../../../../typings';
+import ComponentType from '../../ComponentType';
 
 const RunService: RunService = game.GetService("RunService");
 
@@ -166,7 +167,7 @@ interface MenuOptions {
 }
 
 @Component({
-	tag: 'uipres_component_contextmenu'
+	tag: ComponentType.ContextMenu
 })
 class ContextMenu extends UIComponent<{},Button> implements OnStart {
 // #region CLASS_STATIC
