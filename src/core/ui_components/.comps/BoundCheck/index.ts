@@ -6,7 +6,7 @@ import { Component } from '@flamework/components';
 import type UIPresetsService from '../../../../';
 import { OnStart } from '@flamework/core';
 import Object from '@rbxts/object-utils';
-import ComponentType from '../../ComponentType';
+import ComponentTag from '../../ComponentTag';
 
 /** A table of configurable options that change the default behavior of {@link BoundCheck}. */
 interface BoundCheckOptions {
@@ -76,7 +76,7 @@ class BoundsLayout {
  * This is a UIPresets component that checks if the mouse is within a UI element bounds.
  */
 @Component({
-	tag: ComponentType.BoundCheck
+	tag: ComponentTag.BoundCheck
 })
 class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	private static _boundChecks: Map<BoundCheck,true | undefined> = new Map();
@@ -109,8 +109,6 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	/** A signal that is called when the bounds is exited. */
 	BoundExit: Signal<void> = new Signal();
 
-	declare readonly UUID;
-
 	/**
 	 * This property stores whether the BoundCheck is within bounds.
 	 * @private
@@ -125,10 +123,9 @@ class BoundCheck extends UIComponent<{},GuiObject> implements OnStart {
 	 * @param activeOnStart Whether this BoundCheck should be active when this BoundCheck is created. Default(true)
 	 */
 	constructor(
-		private readonly uiPresetsService: UIPresetsService
+		_uiPresetsService: UIPresetsService
 	) {
-		super();
-		this.UUID = uiPresetsService.fetchNewUUID();
+		super(_uiPresetsService);
 		this.Bounds = Object.assign({},BoundsLayout.empty);
 	}
 

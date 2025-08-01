@@ -1,12 +1,11 @@
 import { t } from '@rbxts/t';
-import { UIPresetsConfig } from '../../../../UIPresetsConfig';
 import UIComponent from '../../index';
 import type { UIComponents } from '../../../../typings/components'
 import { Component } from '@flamework/components';
 import type UIPresetsService from '../../../..';
 import { OnStart } from '@flamework/core';
 import { UUID } from '../../../../typings';
-import ComponentType from '../../ComponentType';
+import ComponentTag from '../../ComponentTag';
 
 const RunService: RunService = game.GetService("RunService");
 
@@ -167,7 +166,7 @@ interface MenuOptions {
 }
 
 @Component({
-	tag: ComponentType.ContextMenu
+	tag: ComponentTag.ContextMenu
 })
 class ContextMenu extends UIComponent<{},Button> implements OnStart {
 // #region CLASS_STATIC
@@ -180,18 +179,6 @@ class ContextMenu extends UIComponent<{},Button> implements OnStart {
 	/** The previous or current ContentMenu that is showed on screen. */
 	private static _previousMenu?: ContextMenu = undefined;
 
-	static {
-		this.contextMenuSG.Name = "UIPresets_ContextMenu";
-		this.contextMenuSG.DisplayOrder = UIPresetsConfig.HighestDisplayOrder + 1;
-		this.contextMenuSG.ResetOnSpawn = false;
-		this.contextMenuSG.Parent = game.GetService("Players").LocalPlayer.WaitForChild("PlayerGui");
-
-		this.textFitLabel.Position = new UDim2(2,0,2,0);
-		this.textFitLabel.Parent = this.contextMenuSG;
-
-		// When the HighestDisplayOrder is changed update the ContextMenuSG DisplayOrder
-		UIPresetsConfig.OnDisplayOrderChanged.Connect((newOrder: number) => this.contextMenuSG.DisplayOrder = newOrder + 1);
-	}
 // #endregion
 
 	/** {@inheritDoc 	UIComponent} */
@@ -209,8 +196,6 @@ class ContextMenu extends UIComponent<{},Button> implements OnStart {
 	options: MenuOptions = {
 			textSizingMode: TextSizingMode.MinimumCommon
 	};
-
-	declare readonly UUID: UUID;
 
 // #region CLASS_PRIVATE
 	/**
@@ -241,21 +226,30 @@ class ContextMenu extends UIComponent<{},Button> implements OnStart {
 	 * @param contexts - The ContextItems that belong to this ContextMenu. Note: This is more performant than calling @see {@link ContextMenu.AddContext} on each ContextItem.
 	 */
 	constructor(
-		private readonly uiPresetsService: UIPresetsService,
-		contexts?: ContextItem[]
+		_uiPresetsService: UIPresetsService
 	) {
-		// TODO: Filter out any contexts that aren't of ContextItem type.
-		contexts?.forEach(context => this._contexts.push(context));
-		
-		super();
-		this.UUID = uiPresetsService.fetchNewUUID();
+		super(_uiPresetsService);
+
+		if (!ContextMenu.contextMenuSG.Parent) {
+			ContextMenu.contextMenuSG.Name = "UIPresets_ContextMenu";
+			ContextMenu.contextMenuSG.DisplayOrder = _uiPresetsService.HighestUIOrder + 1;
+			ContextMenu.contextMenuSG.ResetOnSpawn = false;
+
+			ContextMenu.contextMenuSG.Parent = game.GetService("Players").LocalPlayer.WaitForChild("PlayerGui");
+		}
+
+		if (!ContextMenu.textFitLabel.Parent) {
+			ContextMenu.textFitLabel.Position = new UDim2(2,0,2,0);
+			ContextMenu.textFitLabel.Parent = ContextMenu.contextMenuSG;
+		}
+
+		// When the HighestDisplayOrder is changed update the ContextMenuSG DisplayOrder
+		_uiPresetsService.OnUIOrderChanged.Connect((newOrder: number) => ContextMenu.contextMenuSG.DisplayOrder = newOrder + 1);
 	}
 	
 	onStart(): void {
 		// Updates the text size of these context items that are TextButton elements
 			this.updateTextSize();
-
-			if (!(t.instanceIsA("TextButton")(this.instance) || t.instanceIsA("ImageButton"))) error("TriggerElement must be an instance of TextButton | ImageButton.");
 
 			this.menuBG.Name = `ContextMenu-${this.instance.Name}`;
 			this.menuBG.BackgroundColor3 = Color3.fromRGB(64,64,64);

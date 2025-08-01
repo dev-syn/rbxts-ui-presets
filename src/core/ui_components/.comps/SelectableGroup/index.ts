@@ -5,7 +5,7 @@ import UIPresetsService from '../../../..';
 import { Component } from '@flamework/components';
 import { OnStart } from '@flamework/core';
 import { UUID } from '../../../../typings';
-import ComponentType from '../../ComponentType';
+import ComponentType from '../../ComponentTag';
 
 type Button = TextButton | ImageButton;
 
@@ -57,13 +57,11 @@ class SelectableGroup extends UIComponent implements OnStart {
 
 	/**The Group Config that contains configurable options that will change the default behavior of this SelectableGroup. */
 	Config: SelectableGroupConfig = {
-        isSingleOnly: false,
-        requireSelection: false,
-        borderColor: Color3.fromRGB(255,255,255),
-        borderSize: 2
+		isSingleOnly: false,
+		requireSelection: false,
+		borderColor: Color3.fromRGB(255,255,255),
+		borderSize: 2
 	}
-
-	declare UUID: UUID;
 
 	/**
 	 * @private
@@ -76,13 +74,10 @@ class SelectableGroup extends UIComponent implements OnStart {
 	 * @param group - An optional parameter to assign this SelectableGroup buttons
 	 */
 	constructor(
-		private readonly uiPresetsService: UIPresetsService,
-		group?: Button[]
+		_uiPresetsService: UIPresetsService
 	) {
-		super();
-		this.UUID = uiPresetsService.fetchNewUUID();
+		super(_uiPresetsService);
 		this.SelectionGroup = [];
-		if (group) group.forEach(btn => this.Add(btn));
 	}
 
 	onStart(): void {

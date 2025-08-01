@@ -1,5 +1,6 @@
 import { BaseComponent } from '@flamework/components';
 import { Presets } from 'typings/presets';
+import UIPresetsService from '../..';
 
 type UUID = string;
 
@@ -10,7 +11,9 @@ function generateDefaultAttributes(): {} {
 }
 
 /**
- * A base class for all the UIPresets 'presets'
+ * A base class for all the UIPresets 'presets'.
+ * A 'preset' differs since it's instance is specific and will be
+ * created by UIPresets.
  * @typeParam A - The attributes with their name and value being the type guards
  * @typeParam T - The Instance type that this preset will use
  */
@@ -29,10 +32,14 @@ abstract class Preset<A extends {} = {},T extends Instance = Instance> extends B
 	 * The unique ID of this Component.
 	 * @readonly
 	 */
-	abstract UUID: UUID;
+	readonly UUID: UUID;
 
-	constructor() {
+	protected readonly _uiPresetsService: UIPresetsService
+
+	constructor(uiPresetsService: UIPresetsService) {
 		super();
+		this._uiPresetsService = uiPresetsService;
+		this.UUID = uiPresetsService.fetchNewUUID();
 	}
 
 	override destroy() {

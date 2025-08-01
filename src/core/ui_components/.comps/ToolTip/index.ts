@@ -1,11 +1,10 @@
-import { UIPresetsConfig } from '../../../../UIPresetsConfig';
 import { BoundCheck } from '../BoundCheck';
 import UIComponent from '../..';
 import { UIComponents } from '../../../../typings/components';
 import type UIPresetsService from '../../../..';
 import { OnStart } from '@flamework/core';
 import { Component } from '@flamework/components';
-import ComponentType from '../../ComponentType';
+import ComponentType from '../../ComponentTag';
 
 const TextService: TextService = game.GetService('TextService');
 const UserInputService: UserInputService = game.GetService('UserInputService');
@@ -25,16 +24,6 @@ interface ToolTipOptions {
 class ToolTip extends UIComponent<{},TextLabel> implements OnStart {
 
 	private static _tooltipSG: ScreenGui = new Instance("ScreenGui");
-	static {
-		this._tooltipSG.Name = "UIPresets_ToolTip";
-		this._tooltipSG.IgnoreGuiInset = true;
-		this._tooltipSG.ResetOnSpawn = false;
-		this._tooltipSG.DisplayOrder = UIPresetsConfig.HighestDisplayOrder + 1;
-		this._tooltipSG.Parent = game.GetService('Players').LocalPlayer.WaitForChild("PlayerGui");
-
-		// When the HighestDisplayOrder is changed update the ContextMenuSG DisplayOrder
-		UIPresetsConfig.OnDisplayOrderChanged.Connect((newOrder: number) => this._tooltipSG.DisplayOrder = newOrder + 1);
-	}
 
 	/** {@inheritDoc Component} */
 	Type = "ToolTip" as UIComponents;
@@ -47,15 +36,14 @@ class ToolTip extends UIComponent<{},TextLabel> implements OnStart {
 		FollowMouse: false
 	};
 
-	Name: string;
+	Name: string = "Unnamed";
 
 	/** The text that will be displayed within the {@link ToolTip}. */
-	Text: string;
+	Text: string = "Empty text";
 
 	/** The size of the text that will be displayed. */
 	TextSize: number = 18;
 
-	declare readonly UUID;
 	/**
 	 * The absolute size of the {@link ToolTip} TextLabel.
 	 * @private
@@ -66,17 +54,23 @@ class ToolTip extends UIComponent<{},TextLabel> implements OnStart {
 	 * The bounding check of the {@link ToolTip.Owner}.
 	 * @private
 	 */
-	private _boundCheck?: BoundCheck;
 
 	constructor(
-		uiPresetsService: UIPresetsService,
-		name: string,
-		text: string
+		_uiPresetsService: UIPresetsService,
+		private readonly _boundCheck: BoundCheck
 	) {
-		super();
-		this.UUID = uiPresetsService.fetchNewUUID();
-		this.Name = name;
-		this.Text = text;
+		super(_uiPresetsService);
+
+		if (!ToolTip._tooltipSG.Parent) {
+			ToolTip._tooltipSG.Name = "UIPresets_ToolTip";
+			ToolTip._tooltipSG.IgnoreGuiInset = true;
+			ToolTip._tooltipSG.ResetOnSpawn = false;
+			ToolTip._tooltipSG.DisplayOrder = _uiPresetsService.HighestUIOrder + 1;
+			ToolTip._tooltipSG.Parent = game.GetService('Players').LocalPlayer.WaitForChild("PlayerGui");
+
+			// When the HighestDisplayOrder is changed update the ContextMenuSG DisplayOrder
+			_uiPresetsService.OnUIOrderChanged.Connect((newOrder: number) => ToolTip._tooltipSG.DisplayOrder = newOrder + 1);
+		}
 	}
 
 	onStart(): void {
@@ -105,7 +99,6 @@ class ToolTip extends UIComponent<{},TextLabel> implements OnStart {
 	Destroy() {
 		if (this._boundCheck) {
 			this._boundCheck.Destroy();
-			this._boundCheck = undefined;
 		}
 		super.Destroy();
 	}

@@ -1,5 +1,6 @@
 import { BaseComponent } from '@flamework/components';
 import { UIComponents } from 'typings/components';
+import type UIPresetsService from '../..';
 
 function generateDefaultAttributes() {
 
@@ -24,10 +25,14 @@ abstract class UIComponent<A = {},T extends GuiObject = GuiObject> extends BaseC
 	 * The unique ID of this Component.
 	 * @readonly
 	 */
-	abstract UUID: string;
+	readonly UUID: string;
 
-	constructor() {
+	protected readonly _uiPresetsService: UIPresetsService;
+
+	constructor(uiPresetsService: UIPresetsService) {
 		super();
+		this._uiPresetsService = uiPresetsService;
+		this.UUID = uiPresetsService.fetchNewUUID();
 	}
 
 	override destroy() {
