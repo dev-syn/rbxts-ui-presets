@@ -1,7 +1,9 @@
-import type { Presets } from 'typings/presets';
-import { Preset } from '.';
-import { UUID } from '../../typings';
-import UIPresetsService from '../..';
+import type { Presets } from '../../../typings/presets';
+import { Preset } from '../';
+import type UIPresetsService from '../../..';
+import { Component } from '@flamework/components';
+import PresetTag from '../PresetTag';
+import { OnStart } from '@flamework/core';
 
 /**
  * The TickSetting type that this setting will contain either a Check for a checkmark or a cross as a mark.
@@ -19,10 +21,13 @@ const IMAGE_CHECK = "6031094667";
 
 const ContentProvider: ContentProvider = game.GetService("ContentProvider");
 
+@Component({
+	tag: PresetTag.TickSetting
+})
 /**
  * This is a Setting preset that creates a label and a button which as of now can be a croos or a check image.
  */
-class TickSetting extends Preset {
+class TickSetting extends Preset implements OnStart {
 
 	static {
 			// Preload these image ids
@@ -47,8 +52,6 @@ class TickSetting extends Preset {
 	/** A condition property that checks if this TickSetting is ticked otherwise false. */
 	IsTicked: boolean = false;
 
-	declare readonly UUID: UUID;
-
 	/**
 	 * The type of this TickSetting
 	 * @private
@@ -68,9 +71,14 @@ class TickSetting extends Preset {
 	 * @param name The name of this TickSetting, it does not need to be unique
 	 * @param tickedByDefault Whether this setting is ticked by default or not
 	 */
-	constructor(uiPresetsService: UIPresetsService,name: string) {
-		super();
-		this.UUID = uiPresetsService.fetchNewUUID();
+	constructor(_uiPresetsService: UIPresetsService) {
+		super(_uiPresetsService);
+
+	}
+
+	onStart(): void {
+
+		const name = "unnamed";
 
 		const frame: Frame = new Instance("Frame");
 		frame.Name = `TickSetting-${name}`;

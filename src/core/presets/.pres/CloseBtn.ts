@@ -2,9 +2,10 @@ import type { Presets } from 'typings/presets';
 import { Component } from '@flamework/components';
 import { t } from '@rbxts/t';
 import { OnStart } from '@flamework/core';
-import { Preset } from '.';
-import { UUID } from '../../typings';
-import type UIPresetsService from '../..';
+import { Preset } from '..';
+import { UUID } from '../../../typings';
+import type UIPresetsService from '../../..';
+import PresetTag from '../PresetTag';
 
 // #region Preset_CloseBtn
 	type Preset_CloseBtn = ImageButton & {
@@ -71,7 +72,7 @@ function createCloseButton(): Preset_CloseBtn {
  * for this presets attributes.
  */
 @Component({
-	tag: 'uipresets_CloseBtn',
+	tag: PresetTag.CloseBtn,
 	// Only allow attaching instances that match the same structure of the CloseBtn preset.
 	predicate: (inst: Instance) => t_Preset_CloseBtn(inst)
 })
@@ -83,23 +84,19 @@ class CloseBtn extends Preset implements OnStart {
 	/** The attributes that belong to CloseBtn. */
 	declare Attributes: CloseBtnAttributes;
 
-	declare readonly UUID: UUID;
-
 	/** A reference to the Frame that is for the CloseBtn tint. */
 	private _tintFrame: Frame;
 
 	/**
 	 * Constructs a new close button preset.
 	 */
-	constructor(uiPresetsService: UIPresetsService) {
-		super();
-		this.UUID = uiPresetsService.fetchNewUUID();
+	constructor(_uiPresetsService: UIPresetsService) {
+		super(_uiPresetsService);
 		const closeBtn: Preset_CloseBtn = createCloseButton();
 
 		this._tintFrame = closeBtn.WaitForChild("Tint") as Frame;
 
 		
-
 	}
 	onStart(): void {
 		
