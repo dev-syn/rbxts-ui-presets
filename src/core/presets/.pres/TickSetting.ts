@@ -7,13 +7,13 @@ import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '..';
 import { FW_Attributes } from '../../../typings';
 
 /**
- * The TickSetting type that this setting will contain either a Check for a checkmark or a cross as a mark.
+ * The TickSetting type that this setting will contain either a Check for a check mark or a cross as a mark.
  * @enum
  */
 enum TickSettingType {
 	/** This TickSetting will be a cross image. (X) */
 	Cross = "Cross",
-	/** This TickSetting will be a checkmark image. (✔️)*/
+	/** This TickSetting will be a check mark image. (✔️)*/
 	Check = "Check"
 }
 type vTickSettingType = keyof typeof TickSettingType;
