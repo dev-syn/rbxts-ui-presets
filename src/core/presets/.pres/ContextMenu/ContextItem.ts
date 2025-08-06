@@ -4,6 +4,19 @@ import { PresetTag } from '../../PresetTag';
 import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '../..';
 import { t } from '@rbxts/t';
 import UIPresetsService from '../../../..';
+import { enumKey } from '@rbxts/flamework-meta-utils';
+
+// #region TYPES
+interface ContextItemStyle {
+	BackgroundColor3: Color3;
+	TextColor3: Color3;
+	AutoButtonColor: Color3;
+	BorderMode: Enum.BorderMode;
+}
+
+type OpenableUI = ScreenGui | Frame | ScrollingFrame
+type ContextItemActionable = Callback | ModuleScript | OpenableUI;
+// #endregion
 
 enum ContextItemBtnType {
 	TextBtn,
@@ -53,16 +66,6 @@ enum AssignableAction {
 	OPEN_MODULE
 };
 
-
-interface ContextItemStyle {
-	BackgroundColor3: Color3;
-	TextColor3: Color3;
-	AutoButtonColor: Color3;
-	BorderMode: Enum.BorderMode;
-}
-
-type OpenableUI = ScreenGui | Frame | ScrollingFrame
-
 // #region Attributes
 interface ContextItemAttributes {
 	/**
@@ -82,6 +85,12 @@ const DEFAULT_CONTEXT_ITEM_ATTRIBUTES: UIPresetAttributes & ContextItemAttribute
 	up_Content: "N/A"
 };
 
+// #endregion
+
+// #region LOGGING
+function LOGGING_assignAction(expectedT: string,gotT: string,assignedAction: AssignableAction) {
+	return `Failed to assignAction expected '${expectedT}', got '${gotT}' for ${AssignableAction[assignedAction]}`
+}
 // #endregion
 
 /**
@@ -150,23 +159,22 @@ class ContextItem extends UIPreset<
 	 * 
 	 * @param action An action is a callback function hat will be executed when the ContextItem is clicked.
 	 */
-	assignAction(actionType: AssignableAction.FUNCTION, cb: Callback,values: unknown[]): void;
+	assignAction(actionType: AssignableAction.FUNCTION, cb: Callback,...values: unknown[]): void;
 	assignAction(actionType: AssignableAction.OPEN_MODULE,module: ModuleScript): void;
 	assignAction(actionType: AssignableAction.OPEN_UI,ui: OpenableUI): void;
-	assignAction(actionType: AssignableAction,actionOrValues?: Callback | ModuleScript | OpenableUI) {
+	assignAction(actionType: AssignableAction,action: ContextItemActionable,...values: unknown[]) {
 		switch(actionType) {
 			case AssignableAction.FUNCTION:
-				this._assignableAction = AssignableAction.NONE;
+				if (!typeIs(action,"function")) {
+					warn(`Failed to assignAction expected '${"function"}', got '${action}' for AssignableAction.FUNCTION`)
+				}
+				this._assignableAction = AssignableAction.FUNCTION;
 				this._action = undefined;
 				break;
-			case AssignableAction.CUSTOM:
-				if (type(actionOrValues) !== "function")
-						error("The action callback is missing for the custom action type.");
-				this._assignableAction = AssignableAction.CUSTOM;
-				this._action = actionOrValues as Callback;
-				break;
-			case AssignableAction.OPEN_UI:
 			case AssignableAction.OPEN_MODULE:
+
+			case AssignableAction.OPEN_UI:
+
 			default:
 				error("Invalid assignable action type.");
 		}
