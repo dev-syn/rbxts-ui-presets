@@ -46,6 +46,6 @@
     "@rbxts/object-utils": "^1.0.4",
     "@rbxts/services": "^1.5.4",
     "@rbxts/t": "^3.1.1",
-    "typedoc": "^0.25.8"
+    "typedoc": "^0.28.9"
   }
 }
