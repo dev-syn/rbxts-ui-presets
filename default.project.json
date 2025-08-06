@@ -6,10 +6,7 @@
 			"out/tests"
 		],
     "tree": {
-			"$className": "Folder",
-			"out": {
-				"$path": "out"
-			},
+			"$path": "out",
 			"node_modules": {
 				"$className": "Folder",
 				"@rbxts": {
