@@ -5,6 +5,7 @@ import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '../..';
 import { t } from '@rbxts/t';
 import UIPresetsService from '../../../..';
 import { enumKey } from '@rbxts/flamework-meta-utils';
+import { $warn } from 'rbxts-transform-debug';
 
 // #region TYPES
 interface ContextItemStyle {
@@ -58,31 +59,35 @@ function createContextItem(
 // #endregion
 
 enum AssignableAction {
+	/** Nothing will happen when the {@link ContextItem} is clicked(a default type). */
+	NONE,
 	/** The assigned function will be called when the {@link ContextItem} is clicked. */
 	FUNCTION,
-	/** Toggles the visibility state to 'true' for either a {@link ScreenGui}, {@link Frame} or a {@link ScrollingFrame} Instance.*/
+	/** Toggles the visibility(including Enabled) state to 'true' for either a {@link ScreenGui}, {@link Frame} or a {@link ScrollingFrame} Instance. */
 	OPEN_UI,
-	/** Requires the ModuleScript when the {@link ContextItem}  */
-	OPEN_MODULE
+	/** Requires the ModuleScript when the {@link ContextItem} is clicked, if it is a function returned it will be called.  */
+	RUN_MODULE
 };
+type kAssignableAction = keyof typeof AssignableAction;
 
 // #region Attributes
 interface ContextItemAttributes {
 	/**
-	 * This property stores whether the ContextItem should be active,
+	 * This property stores whether the {@link ContextItem} should be active,
 	 * and whether it should listen for any mouse events.
 	 */
 	up_Active: boolean;
 	/** The text content or an rbxassetid image for this {@link ContextItem}. */
 	up_Content: string;
+	/** This will be the assigned action of the {@link ContextItem}. */
+	upE_AssignableAction: kAssignableAction
 }
 
 const DEFAULT_CONTEXT_ITEM_ATTRIBUTES: UIPresetAttributes & ContextItemAttributes = {
 	...UIPresetDefaultAttributes,
-	/** {@see ContextItemAttributes.up_Active} */
 	up_Active: true,
-	/** {@see ContextItemAttributes.up_Content} */
-	up_Content: "N/A"
+	up_Content: "N/A",
+	upE_AssignableAction: "NONE"
 };
 
 // #endregion
@@ -114,9 +119,9 @@ class ContextItem extends UIPreset<
 	 * @private
 	 * The action that this ContextItem will trigger when clicked.
 	 */
-	private _action?: Callback;
+	private _action?: ContextItemActionable;
 
-	private _assignableAction: AssignableAction = AssignableAction.NONE;
+	private _assignableAction: AssignableAction = AssignableAction.RUN_MODULE;
 	private _values?: Array<unknown>;
 
 	private _buttonType: ContextItemBtnType = DEFAULT_BTN_TYPE;
@@ -160,28 +165,31 @@ class ContextItem extends UIPreset<
 	 * @param action An action is a callback function hat will be executed when the ContextItem is clicked.
 	 */
 	assignAction(actionType: AssignableAction.FUNCTION, cb: Callback,...values: unknown[]): void;
-	assignAction(actionType: AssignableAction.OPEN_MODULE,module: ModuleScript): void;
+	assignAction(actionType: AssignableAction.RUN_MODULE,module: ModuleScript): void;
 	assignAction(actionType: AssignableAction.OPEN_UI,ui: OpenableUI): void;
-	assignAction(actionType: AssignableAction,itemActionable: ContextItemActionable,values?: unknown[]) {
+	assignAction(actionType: AssignableAction,itemActionable: ContextItemActionable,...values: unknown[]) {
 		switch(actionType) {
 			case AssignableAction.FUNCTION:
 				if (!typeIs(itemActionable,"function")) {
-					warn(LOGGING_assignAction("function",typeof itemActionable,AssignableAction.FUNCTION));
+					$warn(LOGGING_assignAction("function",typeof itemActionable,AssignableAction.FUNCTION));
 					return;
 				}
 				this._assignableAction = AssignableAction.FUNCTION;
 				this._action = itemActionable;
+
+				// Is there any values to assign to this ContextItem?
+				if (values && values.size() > 0) this._values = values;
 				break;
-			case AssignableAction.OPEN_MODULE:
+			case AssignableAction.RUN_MODULE:
 				// Is it not a ModuleScript?
 				if (!t.instanceIsA("ModuleScript")(itemActionable)) {
 					// Is it not an Instance at all?
 					if (!t.Instance(itemActionable)) {
-						warn(LOGGING_assignAction("Instance=ModuleScript",typeof itemActionable,AssignableAction.OPEN_MODULE));
+						$warn(LOGGING_assignAction("Instance=ModuleScript",typeof itemActionable,AssignableAction.RUN_MODULE));
 					} else
 						// Is it still an Instance but not a ModuleScript?
-						warn(
-							`The given action is not a ModuleScript but ${enumKey<typeof AssignableAction,AssignableAction.OPEN_MODULE>} is assigned, so the action MUST be a ModuleScript. Got '${itemActionable.ClassName}'`
+						$warn(
+							`The given action is not a ModuleScript but ${enumKey<typeof AssignableAction,AssignableAction.RUN_MODULE>} is assigned, so the action MUST be a ModuleScript. Got '${itemActionable.ClassName}'`
 						);
 					return;
 				}
@@ -195,8 +203,8 @@ class ContextItem extends UIPreset<
 				} else {
 					// Is it an Instance but not the correct one?
 					if (t.Instance(itemActionable)) {
-						warn(LOGGING_assignAction("ScreenGui | Frame | ScrollingFrame",itemActionable.ClassName,AssignableAction.OPEN_UI));
-					} else warn(LOGGING_assignAction("Instance={ScreenGui | Frame | ScrollingFrame}",typeof itemActionable,AssignableAction.OPEN_UI))
+						$warn(LOGGING_assignAction("ScreenGui | Frame | ScrollingFrame",itemActionable.ClassName,AssignableAction.OPEN_UI));
+					} else $warn(LOGGING_assignAction("Instance={ScreenGui | Frame | ScrollingFrame}",typeof itemActionable,AssignableAction.OPEN_UI))
 				}
 				break;
 			default:
@@ -207,12 +215,24 @@ class ContextItem extends UIPreset<
 // #region PRIVATE_METH
 	private _onClick() {
 		switch(this._assignableAction) {
-			case AssignableAction.OPEN_UI:
-					
-			case AssignableAction.OPEN_MODULE:
+			case AssignableAction.FUNCTION:
+				if (!this._action) return;
 
-			case AssignableAction.CUSTOM:
-				if (this._action) this._action();
+				const action = this._action as Callback;
+				if (this._values) action(...this._values);
+				else action();
+			case AssignableAction.RUN_MODULE:
+				let src;
+				try {
+					src = require(this._action as ModuleScript);
+					if (typeIs(src,"function")) {
+						src();
+					}
+				} catch(err) {
+					$warn(`Failed to RUN_MODULE with`);
+				}
+			case AssignableAction.OPEN_UI:
+				
 		}
 	}
 // #endregion
