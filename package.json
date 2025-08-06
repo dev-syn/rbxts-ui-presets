@@ -1,0 +1,51 @@
+{
+  "name": "@rbxts/ui-presets",
+  "description": "This is a package that contains various UI presets and components which was designed to ease my development. You are welcome to use this package I will note that it's mainly designed for personal use.",
+  "version": "0.1.0",
+  "author": "dev-syn",
+  "license": "MIT",
+  "main": "out/init.lua",
+  "typings": "out/types/generated/index.d.ts",
+  "files": [
+    "out",
+    "!**/*.tsbuildinfo"
+  ],
+  "keywords": [
+    "roblox-ts",
+    "roblox",
+    "lua",
+    "luau"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "rbxtsc --type package",
+    "build:test": "rbxtsc --rojo test.project.json --type game",
+    "build:rojo": "rojo build test.project.json -o testPlace.rbxlx",
+    "watch:test": "rbxtsc -w --rojo test.project.json --type game",
+    "test": "npm run build:test && rojo build test.project.json -o ui-presets.test.rbxl",
+    "update:flamework": "npm i @flamework/core@latest && npm i -D rbxts-transformer-flamework@latest"
+  },
+  "devDependencies": {
+    "@rbxts/compiler-types": "^2.2.0-types.0",
+    "@rbxts/types": "^1.0.750",
+    "rbxts-transformer-flamework": "^1.3.1",
+    "roblox-ts": "^3.0.0",
+    "typedoc-material-theme": "^1.0.2",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "@flamework/components": "^1.3.1",
+    "@flamework/core": "^1.3.1",
+    "@flamework/networking": "^1.3.1",
+    "@rbxts/beacon": "^2.1.1",
+    "@rbxts/flamework-meta-utils": "^1.0.7",
+    "@rbxts/maid": "^1.1.0",
+    "@rbxts/object-utils": "^1.0.4",
+    "@rbxts/services": "^1.5.4",
+    "@rbxts/t": "^3.1.1",
+    "typedoc": "^0.25.8"
+  }
+}
