@@ -70,7 +70,7 @@ enum AssignableAction {
 interface ContextItemAttributes {
 	/**
 	 * This property stores whether the ContextItem should be active,
-	 * and whether it shouldlisten for any mouse events.
+	 * and whether it should listen for any mouse events.
 	 */
 	up_Active: boolean;
 	/** The text content or an rbxassetid image for this {@link ContextItem}. */
@@ -162,21 +162,45 @@ class ContextItem extends UIPreset<
 	assignAction(actionType: AssignableAction.FUNCTION, cb: Callback,...values: unknown[]): void;
 	assignAction(actionType: AssignableAction.OPEN_MODULE,module: ModuleScript): void;
 	assignAction(actionType: AssignableAction.OPEN_UI,ui: OpenableUI): void;
-	assignAction(actionType: AssignableAction,action: ContextItemActionable,...values: unknown[]) {
+	assignAction(actionType: AssignableAction,itemActionable: ContextItemActionable,values?: unknown[]) {
 		switch(actionType) {
 			case AssignableAction.FUNCTION:
-				if (!typeIs(action,"function")) {
-					warn(`Failed to assignAction expected '${"function"}', got '${action}' for AssignableAction.FUNCTION`)
+				if (!typeIs(itemActionable,"function")) {
+					warn(LOGGING_assignAction("function",typeof itemActionable,AssignableAction.FUNCTION));
+					return;
 				}
 				this._assignableAction = AssignableAction.FUNCTION;
-				this._action = undefined;
+				this._action = itemActionable;
 				break;
 			case AssignableAction.OPEN_MODULE:
+				// Is it not a ModuleScript?
+				if (!t.instanceIsA("ModuleScript")(itemActionable)) {
+					// Is it not an Instance at all?
+					if (!t.Instance(itemActionable)) {
+						warn(LOGGING_assignAction("Instance=ModuleScript",typeof itemActionable,AssignableAction.OPEN_MODULE));
+					} else
+						// Is it still an Instance but not a ModuleScript?
+						warn(
+							`The given action is not a ModuleScript but ${enumKey<typeof AssignableAction,AssignableAction.OPEN_MODULE>} is assigned, so the action MUST be a ModuleScript. Got '${itemActionable.ClassName}'`
+						);
+					return;
+				}
 
+				break;
 			case AssignableAction.OPEN_UI:
-
+				if (t.instanceIsA("ScreenGui")(itemActionable)) {
+					itemActionable.Enabled = true;
+				} else if (t.instanceIsA("Frame")(itemActionable) || t.instanceIsA("ScrollingFrame")(itemActionable)) {
+					itemActionable.Visible = true;
+				} else {
+					// Is it an Instance but not the correct one?
+					if (t.Instance(itemActionable)) {
+						warn(LOGGING_assignAction("ScreenGui | Frame | ScrollingFrame",itemActionable.ClassName,AssignableAction.OPEN_UI));
+					} else warn(LOGGING_assignAction("Instance={ScreenGui | Frame | ScrollingFrame}",typeof itemActionable,AssignableAction.OPEN_UI))
+				}
+				break;
 			default:
-				error("Invalid assignable action type.");
+				error(`Unknown AssignableAction actionType?`);
 		}
 	}
 
