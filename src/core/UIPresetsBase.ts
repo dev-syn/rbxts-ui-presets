@@ -1,10 +1,13 @@
 import { BaseComponent } from '@flamework/components';
 import type UIPresetsService from '..';
 import Maid from '@rbxts/maid';
+import { PresetRegistry } from './presets/PresetRegistry';
+import { UIPresetComponents } from '../typings';
 
 interface UIPresetsBaseAttributes {
 	up_UUID: string;
-	up_Type: string;
+	/** Remember to re-assign this in the derived components 'default attributes'. */
+	readonly up_Type: string;
 }
 
 const UIPresetsBaseDefaultAttributes: UIPresetsBaseAttributes = {
