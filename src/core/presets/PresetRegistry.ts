@@ -1,4 +1,3 @@
-import { UIPreset } from '.';
 import { IPresetStatic } from '../../typings/IPresetStatic';
 import { CloseBtn, Preset_CloseBtn } from './.pres/CloseBtn'
 import { Preset_TickSetting, TickSetting } from './.pres/TickSetting'
