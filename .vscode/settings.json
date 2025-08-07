@@ -1,9 +1,4 @@
 {
 	"typescript.tsdk": "node_modules/typescript/lib",
-	"files.eol": "\n",
-	"cSpell.words": [
-		"flamework",
-		"rbxassetid",
-		"rbxts"
-	]
+	"files.eol": "\n"
 }
