@@ -71,7 +71,7 @@ class ContextMenu extends UIPreset<
 > implements OnStart {
 
 // #region STATIC
-	static PresetInstance = () => undefined;
+	static PresetInstance = () => createContextMenu();
 
 	static contextMenuSG: ScreenGui = new Instance("ScreenGui");
 	static textFitLabel: TextLabel = new Instance("TextLabel");
