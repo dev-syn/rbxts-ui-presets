@@ -6,6 +6,7 @@ import { PresetTag } from '../../PresetTag';
 import { FW_Attributes } from '../../../../typings';
 import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '../..';
 import { ContextItem } from './ContextItem';
+import { ConfigurationComponent } from '@rbxts/syn-utils';
 
 // #region Preset_ContextMenu
 type Preset_ContextMenu = Frame & {}
@@ -46,14 +47,11 @@ const tTextSizingMode = t.interface({
 interface MenuOptions {
 	/** This only affects TextButton {@link ContextItem.instance} instances. */
 	textSizingMode: TextSizingMode;
-
-	textSizeScaler: number;
 }
 
 // #region Attributes
 interface ContextMenuAttributes {
 	up_ItemSize: Vector2,
-	
 	/** A scaler modifier number that will affect the {@link ContextMenu.TextSize} of each  */
 	up_TextSizeScalar: number
 }
@@ -65,9 +63,12 @@ const DEFAULT_CONTEXT_MENU_ATTRIBUTES: UIPresetAttributes & ContextMenuAttribute
 };
 
 // #endregion
-@Component({
+@ConfigurationComponent({
 	tag: PresetTag.ContextMenu,
 	defaults: DEFAULT_CONTEXT_MENU_ATTRIBUTES as unknown as FW_Attributes,
+	configuration: {
+		TriggerElement: t.union(t.instanceIsA("TextButton"),t.instanceIsA("ImageButton"))
+	}
 })
 class ContextMenu extends UIPreset<
 	ContextMenuAttributes,
@@ -90,10 +91,7 @@ class ContextMenu extends UIPreset<
 	private static _lastActiveMenu?: ContextMenu = undefined;
 // #endregion
 
-	Type = PresetTag.ContextMenu;
-
-	/** A Vector2 which contains the scale modifier of the {@link ContextMenu.Owner} */
-	ItemSize: Vector2 = DEFAULT_CONTEXT_MENU_ATTRIBUTES.up_ItemSize;
+	presetType = PresetTag.ContextMenu;
 
 	Options: MenuOptions = {
 			textSizingMode: TextSizingMode.MinimumCommon
@@ -149,13 +147,11 @@ class ContextMenu extends UIPreset<
 		_uiPresetsService.OnUIOrderChanged.Connect((newOrder: number) => ContextMenu.ContextMenuUI.DisplayOrder = newOrder + 1);
 	}
 
-	override onStart(): void {
+	onStart(): void {
 		// Updates the text size of these context items that are TextButton elements
 		this.updateTextSize();
 
-		this.menuBG.Name = `ContextMenu-${this.instance.Name}`;
-		this.menuBG.BackgroundColor3 = Color3.fromRGB(64,64,64);
-		this.menuBG.Visible = true;
+		this.instance.Visible = true;
 
 		// When the trigger element is right clicked draw and display the context menu
 		this._connections.push(

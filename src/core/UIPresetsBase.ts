@@ -1,8 +1,6 @@
 import { BaseComponent } from '@flamework/components';
 import type UIPresetsService from '..';
 import Maid from '@rbxts/maid';
-import { PresetRegistry } from './presets/PresetRegistry';
-import { UIPresetComponents } from '../typings';
 
 interface UIPresetsBaseAttributes {
 	/** The uuid of the preset or component. */
@@ -23,7 +21,6 @@ const UIPresetsBaseDefaultAttributes: UIPresetsBaseAttributes = {
  */
 abstract class UIPresetsBase<
 	A extends {} = {},
-	C extends Configuration = Configuration,
 	I extends Instance = Instance
 > extends BaseComponent<A & UIPresetsBaseAttributes,I>
 {
@@ -40,8 +37,6 @@ abstract class UIPresetsBase<
 	protected readonly maid: Maid;
 	/** This is designed like this so that I can pass UIPresetsService to the base, while receiving my DI classes from the constructor. */
 	protected readonly UIPresetsService: UIPresetsService;
-
-	protected config?: C;
 
 	constructor(
 		_uiPresetsService: UIPresetsService
@@ -67,12 +62,7 @@ abstract class UIPresetsBase<
 	protected assignAttributes() {
 		this.attributes.up_UUID = this.uuid;
 	}
-
-	/** Initializes the configuration for this object. Do not call this before onStart().*/
-	protected initConfig() {
-		
-	}
-
+	
 }
 
 export { UIPresetsBase, UIPresetsBaseAttributes, UIPresetsBaseDefaultAttributes }

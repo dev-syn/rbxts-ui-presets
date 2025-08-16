@@ -23,10 +23,8 @@ const UIPresetDefaultAttributes: UIPresetJoinedAttributes = {
  */
 abstract class UIPreset<
 	A extends {} = {},
-	/** Configuration is implemented simply for Object Values which attributes can't store. */
-	C extends Configuration = Configuration,
 	I extends GuiObject = GuiObject
-> extends UIPresetsBase<A & UIPresetAttributes,C,I> {
+> extends UIPresetsBase<A & UIPresetAttributes,I> {
 
 	readonly baseType: 'Preset' = "Preset";
 	/** The type/name of this Preset. */
