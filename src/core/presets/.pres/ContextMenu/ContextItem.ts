@@ -6,6 +6,7 @@ import { t } from '@rbxts/t';
 import UIPresetsService from '../../../..';
 import { enumKey } from '@rbxts/flamework-meta-utils';
 import { $warn } from 'rbxts-transform-debug';
+import { ContextMenu } from '.';
 
 // #region TYPES
 interface ContextItemStyle {
@@ -36,6 +37,7 @@ const tPreset_ContextItem = t.intersection(t.union(t.instanceIsA("TextButton"),t
 function createContextItem(
 	btnType: ContextItemBtnType = DEFAULT_BTN_TYPE,
 	content: string = "N/A"): Preset_ContextItem {
+	
 	const btn: Button = new Instance(
 		btnType === ContextItemBtnType.TextBtn
 		? "TextButton" : "ImageButton"
@@ -58,6 +60,7 @@ function createContextItem(
 
 // #endregion
 
+// #region Attributes
 enum AssignableAction {
 	/** Nothing will happen when the {@link ContextItem} is clicked(a default type). */
 	NONE,
@@ -70,7 +73,6 @@ enum AssignableAction {
 };
 type kAssignableAction = keyof typeof AssignableAction;
 
-// #region Attributes
 interface ContextItemAttributes {
 	/**
 	 * This property stores whether the {@link ContextItem} should be active,
@@ -126,6 +128,9 @@ class ContextItem extends UIPreset<
 
 	private _buttonType: ContextItemBtnType = DEFAULT_BTN_TYPE;
 	private _btnConnection?: RBXScriptConnection;
+
+	/** The {@link ContextMenu} that owns this item. */
+	private _owner?: ContextMenu;
 // #endregion
 
 	constructor(_uiPresetsService: UIPresetsService) { super(_uiPresetsService); }
@@ -160,9 +165,16 @@ class ContextItem extends UIPreset<
 		}
 	}
 
+	setOwner(menu: ContextMenu): void {
+		if (!(menu instanceof ContextMenu)) {
+			return $warn(`Invalid type provided for the ContextItem owner. Got ${typeOf(menu)}, expected: 'ContextMenu'`);
+		}
+		this._owner = menu;
+	}
+
 	/**
 	 * 
-	 * @param action An action is a callback function hat will be executed when the ContextItem is clicked.
+	 * @param action An action is a callback function that will be executed when the {@link ContextItem} is clicked.
 	 */
 	assignAction(actionType: AssignableAction.FUNCTION, cb: Callback,...values: unknown[]): void;
 	assignAction(actionType: AssignableAction.RUN_MODULE,module: ModuleScript): void;
@@ -186,14 +198,15 @@ class ContextItem extends UIPreset<
 					// Is it not an Instance at all?
 					if (!t.Instance(itemActionable)) {
 						$warn(LOGGING_assignAction("Instance=ModuleScript",typeof itemActionable,AssignableAction.RUN_MODULE));
-					} else
+					} else {
 						// Is it still an Instance but not a ModuleScript?
 						$warn(
 							`The given action is not a ModuleScript but ${enumKey<typeof AssignableAction,AssignableAction.RUN_MODULE>} is assigned, so the action MUST be a ModuleScript. Got '${itemActionable.ClassName}'`
 						);
+					}
 					return;
 				}
-
+				this._action = require()
 				break;
 			case AssignableAction.OPEN_UI:
 				if (t.instanceIsA("ScreenGui")(itemActionable)) {

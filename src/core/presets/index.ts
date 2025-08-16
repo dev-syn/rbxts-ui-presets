@@ -1,5 +1,5 @@
 import UIPresetsService from '../..';
-import { UIPresetsPresetType } from '../../typings';
+import { PresetType } from '../../typings';
 import { UIPresetsBaseAttributes, UIPresetsBaseDefaultAttributes, UIPresetsBase } from '../UIPresetsBase';
 
 interface UIPresetAttributes {
@@ -23,12 +23,14 @@ const UIPresetDefaultAttributes: UIPresetJoinedAttributes = {
  */
 abstract class UIPreset<
 	A extends {} = {},
+	/** Configuration is implemented simply for Object Values which attributes can't store. */
+	C extends Configuration = Configuration,
 	I extends GuiObject = GuiObject
-> extends UIPresetsBase<A & UIPresetAttributes,I> {
+> extends UIPresetsBase<A & UIPresetAttributes,C,I> {
 
-	readonly BaseType: 'Preset' = "Preset";
+	readonly baseType: 'Preset' = "Preset";
 	/** The type/name of this Preset. */
-	abstract Type: UIPresetsPresetType;
+	abstract presetType: PresetType;
 
 	constructor(
 		_uiPresetsService: UIPresetsService

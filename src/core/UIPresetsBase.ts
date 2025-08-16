@@ -5,13 +5,14 @@ import { PresetRegistry } from './presets/PresetRegistry';
 import { UIPresetComponents } from '../typings';
 
 interface UIPresetsBaseAttributes {
+	/** The uuid of the preset or component. */
 	up_UUID: string;
-	/** Remember to re-assign this in the derived components 'default attributes'. */
+	/** Remember to re-assign this in the derived preset or component 'default attributes'. */
 	readonly up_Type: string;
 }
 
 const UIPresetsBaseDefaultAttributes: UIPresetsBaseAttributes = {
-	up_UUID: "N/A",
+	up_UUID: "{N/A}",
 	up_Type: "{invalid}"
 };
 
@@ -22,9 +23,10 @@ const UIPresetsBaseDefaultAttributes: UIPresetsBaseAttributes = {
  */
 abstract class UIPresetsBase<
 	A extends {} = {},
-	I extends Instance = Instance> extends BaseComponent<
-	A & UIPresetsBaseAttributes,I
-	> {
+	C extends Configuration = Configuration,
+	I extends Instance = Instance
+> extends BaseComponent<A & UIPresetsBaseAttributes,I>
+{
 	
 	/**
 	 * The base type of the derived component classes,
@@ -32,20 +34,21 @@ abstract class UIPresetsBase<
 	 * and should never be changed.
 	 * @readonly 
 	 */
-	abstract readonly BaseType: "Component" | "Preset";
+	abstract readonly baseType: "Component" | "Preset";
+	readonly uuid: string;
 
-	readonly UUID: string;
-	
 	protected readonly maid: Maid;
 	/** This is designed like this so that I can pass UIPresetsService to the base, while receiving my DI classes from the constructor. */
 	protected readonly UIPresetsService: UIPresetsService;
 
+	protected config?: C;
+
 	constructor(
 		_uiPresetsService: UIPresetsService
 	) {
-		super()
+		super();
 		this.UIPresetsService = _uiPresetsService;
-		this.UUID = _uiPresetsService.fetchNewUUID();
+		this.uuid = _uiPresetsService.fetchNewUUID();
 		this.maid = new Maid();
 	}
 
@@ -62,7 +65,12 @@ abstract class UIPresetsBase<
 	 * attributes(the live values from the {FW.BaseComponent} classes) like {@link UIPresetsBase.UUID}.
 	 */
 	protected assignAttributes() {
-		this.attributes.up_UUID = this.UUID;
+		this.attributes.up_UUID = this.uuid;
+	}
+
+	/** Initializes the configuration for this object. Do not call this before onStart().*/
+	protected initConfig() {
+		
 	}
 
 }

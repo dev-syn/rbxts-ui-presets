@@ -1,5 +1,5 @@
 import type UIPresetsService from '../..';
-import { UIPresetsComponentType } from '../../typings';
+import { ComponentType } from '../../typings';
 import { UIPresetsBaseAttributes, UIPresetsBaseDefaultAttributes, UIPresetsBase } from '../UIPresetsBase';
 
 interface UIComponentAttributes {
@@ -24,16 +24,17 @@ const UIComponentDefaultAttributes: UIComponentJoinedAttributes = {
  */
 abstract class UIComponent<
 A extends {} = {},
+C extends Configuration = Configuration,
 I extends GuiObject = GuiObject
-> extends UIPresetsBase<A & UIComponentAttributes,I> {
+> extends UIPresetsBase<A & UIComponentAttributes,C,I> {
 
 	/**
 	 * The base type of the derived classes, this will always be 'Component' and should never be changed.
 	 * @readonly 
 	 */
-	readonly BaseType: "Component" = "Component";
+	readonly base: "Component" = "Component";
 	/** The type/name of this {@link UIComponent}. */
-	abstract Type: UIPresetsComponentType;
+	abstract Type: ComponentType;
 
 	constructor(_uiPresetsService: UIPresetsService) {
 		super(_uiPresetsService);

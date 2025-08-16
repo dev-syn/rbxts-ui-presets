@@ -44,13 +44,17 @@ const tTextSizingMode = t.interface({
  * These are the options that can be passed to ContextMenu to change default ContextMenu behavior.
  */
 interface MenuOptions {
-	/** This only affects{@link ContextItem} */
+	/** This only affects TextButton {@link ContextItem.instance} instances. */
 	textSizingMode: TextSizingMode;
+
+	textSizeScaler: number;
 }
 
 // #region Attributes
 interface ContextMenuAttributes {
 	up_ItemSize: Vector2,
+	
+	/** A scaler modifier number that will affect the {@link ContextMenu.TextSize} of each  */
 	up_TextSizeScalar: number
 }
 
@@ -73,23 +77,23 @@ class ContextMenu extends UIPreset<
 // #region STATIC
 	static PresetInstance = () => createContextMenu();
 
-	static contextMenuSG: ScreenGui = new Instance("ScreenGui");
-	static textFitLabel: TextLabel = new Instance("TextLabel");
+	/** The {@link ScreenGui} of this ContextMenu. */
+	static ContextMenuUI: ScreenGui = new Instance("ScreenGui");
+
+	/** A {@link TextLabel} for checking if text fits within a label. */
+	static TextFitsLabel: TextLabel = new Instance("TextLabel");
 	
 	/** Whether only one context menu can be showed at a time. */
-	static onlySingleContext: boolean = true;
+	static OnlySingleContext: boolean = true;
 
 	/** The previous or current ContentMenu that is showed on screen. */
-	private static lastActiveMenu?: ContextMenu = undefined;
+	private static _lastActiveMenu?: ContextMenu = undefined;
 // #endregion
 
 	Type = PresetTag.ContextMenu;
 
-	/** A Vector2 which contains the scale modifier of the @see {@link ContextMenu.Owner} */
+	/** A Vector2 which contains the scale modifier of the {@link ContextMenu.Owner} */
 	ItemSize: Vector2 = DEFAULT_CONTEXT_MENU_ATTRIBUTES.up_ItemSize;
-
-	/** A scaler modifier number that will affect the @see {@link ContextMenu.TextSize} \* @see {@link textSizeScaler} */
-	TextSizeScaler: number = DEFAULT_CONTEXT_MENU_ATTRIBUTES.up_TextSizeScalar;
 
 	Options: MenuOptions = {
 			textSizingMode: TextSizingMode.MinimumCommon
@@ -128,27 +132,24 @@ class ContextMenu extends UIPreset<
 	) {
 		super(_uiPresetsService);
 
-		if (!ContextMenu.contextMenuSG.Parent) {
-			ContextMenu.contextMenuSG.Name = "UIPresets_ContextMenu";
-			ContextMenu.contextMenuSG.DisplayOrder = _uiPresetsService.HighestUIOrder + 1;
-			ContextMenu.contextMenuSG.ResetOnSpawn = false;
+		if (!ContextMenu.ContextMenuUI.Parent) {
+			ContextMenu.ContextMenuUI.Name = "UIPresets_ContextMenu";
+			ContextMenu.ContextMenuUI.DisplayOrder = _uiPresetsService.HighestUIOrder + 1;
+			ContextMenu.ContextMenuUI.ResetOnSpawn = false;
 
-			ContextMenu.contextMenuSG.Parent = game.GetService("Players").LocalPlayer.WaitForChild("PlayerGui");
+			ContextMenu.ContextMenuUI.Parent = game.GetService("Players").LocalPlayer.WaitForChild("PlayerGui");
 		}
 
-		if (!ContextMenu.textFitLabel.Parent) {
-			ContextMenu.textFitLabel.Position = new UDim2(2,0,2,0);
-			ContextMenu.textFitLabel.Parent = ContextMenu.contextMenuSG;
+		if (!ContextMenu.TextFitsLabel.Parent) {
+			ContextMenu.TextFitsLabel.Position = new UDim2(2,0,2,0);
+			ContextMenu.TextFitsLabel.Parent = ContextMenu.ContextMenuUI;
 		}
 
 		// When the HighestDisplayOrder is changed update the ContextMenuSG DisplayOrder
-		_uiPresetsService.OnUIOrderChanged.Connect((newOrder: number) => ContextMenu.contextMenuSG.DisplayOrder = newOrder + 1);
+		_uiPresetsService.OnUIOrderChanged.Connect((newOrder: number) => ContextMenu.ContextMenuUI.DisplayOrder = newOrder + 1);
 	}
 
-	onStart(): void {
-		for (const item of this._contexts) {
-			if (item.)
-		}
+	override onStart(): void {
 		// Updates the text size of these context items that are TextButton elements
 		this.updateTextSize();
 
@@ -321,32 +322,32 @@ class ContextMenu extends UIPreset<
 	 * Gets all the active ContextItems belonging to this ContextMenu.
 	 * @returns - An array of ContextItem.
 	 */
-	GetActiveContexts(): ContextItem[] { return this._contexts.filter(c => c.Active); }
+	GetActiveContexts(): ContextItem[] { return this._contexts.filter(c => c.attributes.up_Active); }
 
 	/**
-	 * Adds the given ContextItem to this ContextMenu.
-	 * @param context - The ContextItem object to add
+	 * Adds the given {@link ContextItem} to this {@link ContextMenu}.
+	 * @param item - The {@link ContextItem} object to add
 	 */
-	AddContext(context: ContextItem) {
-		this._contexts.push(context);
+	AddContext(item: ContextItem) {
+		this._contexts.push(item);
 		this.updateTextSize();
 	}
 
 	/**
-	 * Removes the given ContextItem from this ContextMenu.
-	 * @param context - The ContextItem object to remove
+	 * Removes the given {@link ContextItem} from this ContextMenu.
+	 * @param item - The {@link ContextItem} object to remove
 	 */
-	RemoveContext(context: ContextItem) {
-		const index: number = this._contexts.indexOf(context);
+	RemoveContext(item: ContextItem) {
+		const index: number = this._contexts.indexOf(item);
 		if (index !== -1) this._contexts.remove(index);
 		this.updateTextSize();
 	}
 
 	/**
-	 * Clears all ContextItems from this ContextMenu internally destroying each ContextItem.
+	 * Clears all ContextItems from this {@link ContextMenu} internally destroying each ContextItem.
 	 */
 	Clear() {
-		this._contexts.forEach(c => c.Destroy());
+		this._contexts.forEach(c => c.instance.Destroy());
 		this._contexts.clear();
 	}
 
@@ -358,17 +359,17 @@ class ContextMenu extends UIPreset<
 		const owner = this.instance;
 		if (!t.instanceIsA('TextButton')(owner)) return;
 
-		if (this.options.textSizingMode === TextSizingMode.MinimumCommon) {
+		if (this.Options.textSizingMode === TextSizingMode.MinimumCommon) {
 			// The minimum absolute size of each context item on the y axis
-			const itemAbsSizeY: number = math.ceil(this.itemSize.Y * owner.AbsoluteSize.Y);
+			const itemAbsSizeY: number = math.ceil(this.ItemSize.Y * owner.AbsoluteSize.Y);
 
 			// The minimum absolute size of each context item on the x axis
-			const itemAbsSizeX: number = math.ceil(this.itemSize.X * owner.AbsoluteSize.X);
+			const itemAbsSizeX: number = math.ceil(this.ItemSize.X * owner.AbsoluteSize.X);
 
 			this._itemTextSize = this.GetCommonTextSize(itemAbsSizeX,itemAbsSizeY);
 		}
-		else if (this.options.textSizingMode === TextSizingMode.Scaled)
-			this._itemTextSize = this.textSizeScaler * owner.TextSize;
+		else if (this.Options.textSizingMode === TextSizingMode.Scaled)
+			this._itemTextSize = this.TextSizeScaler * owner.TextSize;
 	}
 
 }
