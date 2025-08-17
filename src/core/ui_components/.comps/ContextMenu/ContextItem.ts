@@ -1,7 +1,7 @@
 import { Component } from '@flamework/components';
 import { Button, FW_Attributes } from '../../../../typings';
-import { PresetTag } from '../../PresetTag';
-import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '../..';
+import { PresetTag } from '../../../presets/PresetTag';
+import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '../../../presets';
 import { t } from '@rbxts/t';
 import UIPresetsService from '../../../..';
 import { enumKey } from '@rbxts/flamework-meta-utils';

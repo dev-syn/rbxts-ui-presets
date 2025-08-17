@@ -2,11 +2,12 @@ import { Component } from '@flamework/components';
 import { t } from '@rbxts/t';
 import { OnStart } from '@flamework/core';
 import type UIPresetsService from '../../../..';
-import { PresetTag } from '../../PresetTag';
+import { PresetTag } from '../../../presets/PresetTag';
 import { FW_Attributes } from '../../../../typings';
-import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '../..';
+import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '../../../presets';
 import { ContextItem } from './ContextItem';
 import { ConfigurationComponent } from '@rbxts/syn-utils';
+import { UIComponent } from '../..';
 
 // #region Preset_ContextMenu
 type Preset_ContextMenu = Frame & {}
@@ -70,9 +71,12 @@ const DEFAULT_CONTEXT_MENU_ATTRIBUTES: UIPresetAttributes & ContextMenuAttribute
 		TriggerElement: t.union(t.instanceIsA("TextButton"),t.instanceIsA("ImageButton"))
 	}
 })
-class ContextMenu extends UIPreset<
+/**
+ * This is a component which should 
+ */
+class ContextMenu extends UIComponent<
 	ContextMenuAttributes,
-	GuiObject
+	GuiObject 
 > implements OnStart {
 
 // #region STATIC
