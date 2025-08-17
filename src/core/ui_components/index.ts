@@ -24,17 +24,16 @@ const UIComponentDefaultAttributes: UIComponentJoinedAttributes = {
  */
 abstract class UIComponent<
 A extends {} = {},
-C extends Configuration = Configuration,
 I extends GuiObject = GuiObject
-> extends UIPresetsBase<A & UIComponentAttributes,C,I> {
+> extends UIPresetsBase<A & UIComponentAttributes,I> {
 
 	/**
 	 * The base type of the derived classes, this will always be 'Component' and should never be changed.
 	 * @readonly 
 	 */
-	readonly base: "Component" = "Component";
+	readonly baseType: "Component" = "Component";
 	/** The type/name of this {@link UIComponent}. */
-	abstract Type: ComponentType;
+	abstract componentType: ComponentType;
 
 	constructor(_uiPresetsService: UIPresetsService) {
 		super(_uiPresetsService);
