@@ -27,7 +27,7 @@ abstract class UIPreset<
 > extends UIPresetsBase<A & UIPresetAttributes,I> {
 
 	readonly baseType: 'Preset' = "Preset";
-	/** The type/name of this Preset. */
+	/** The type/name of this {@link UIPreset}. */
 	abstract presetType: PresetType;
 
 	constructor(
