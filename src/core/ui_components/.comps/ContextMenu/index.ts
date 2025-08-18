@@ -2,12 +2,11 @@ import { Component } from '@flamework/components';
 import { t } from '@rbxts/t';
 import { OnStart } from '@flamework/core';
 import type UIPresetsService from '../../../..';
-import { PresetTag } from '../../../presets/PresetTag';
 import { FW_Attributes } from '../../../../typings';
-import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '../../../presets';
-import { ContextItem } from './ContextItem';
+import { ContextItem } from '../../../presets/.pres/ContextItem';
 import { ConfigurationComponent } from '@rbxts/syn-utils';
 import { UIComponent } from '../..';
+import { ComponentTag } from '../../ComponentTag';
 
 // #region Preset_ContextMenu
 type Preset_ContextMenu = Frame & {}
@@ -65,7 +64,7 @@ const DEFAULT_CONTEXT_MENU_ATTRIBUTES: UIPresetAttributes & ContextMenuAttribute
 
 // #endregion
 @ConfigurationComponent({
-	tag: PresetTag.ContextMenu,
+	tag: ComponentTag.ContextMenu,
 	defaults: DEFAULT_CONTEXT_MENU_ATTRIBUTES as unknown as FW_Attributes,
 	configuration: {
 		TriggerElement: t.union(t.instanceIsA("TextButton"),t.instanceIsA("ImageButton"))
@@ -95,7 +94,7 @@ class ContextMenu extends UIComponent<
 	private static _lastActiveMenu?: ContextMenu = undefined;
 // #endregion
 
-	presetType = PresetTag.ContextMenu;
+	componentType = ComponentTag.ContextMenu;
 
 	Options: MenuOptions = {
 			textSizingMode: TextSizingMode.MinimumCommon
