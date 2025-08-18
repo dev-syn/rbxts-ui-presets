@@ -1,12 +1,14 @@
 import { Component } from '@flamework/components';
-import { Button, FW_Attributes } from '../../../../typings';
-import { PresetTag } from '../../../presets/PresetTag';
-import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '../../../presets';
+import { Button, FW_Attributes } from '../../../typings';
+import { PresetTag } from '../PresetTag';
+import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '..';
 import { t } from '@rbxts/t';
-import UIPresetsService from '../../../..';
+import UIPresetsService from '../../..';
 import { enumKey } from '@rbxts/flamework-meta-utils';
-import { $warn } from 'rbxts-transform-debug';
-import { ContextMenu } from '.';
+import { $error, $warn } from 'rbxts-transform-debug';
+import { ContextMenu } from '../../ui_components/.comps/ContextMenu';
+import { ComponentTag } from '../../ui_components/ComponentTag';
+import { UIComponent } from '../../ui_components';
 
 // #region TYPES
 interface ContextItemStyle {
@@ -32,7 +34,7 @@ const DEFAULT_BTN_TYPE: ContextItemBtnType = ContextItemBtnType.TextBtn;
 
 type Preset_ContextItem = Button;
 
-const tPreset_ContextItem = t.intersection(t.union(t.instanceIsA("TextButton"),t.instanceIsA("ImageButton")));
+const tPreset_ContextItem = t.union(t.instanceIsA("TextButton"),t.instanceIsA("ImageButton"));
 
 function createContextItem(
 	btnType: ContextItemBtnType = DEFAULT_BTN_TYPE,
@@ -60,16 +62,22 @@ function createContextItem(
 
 // #endregion
 
+// #region LOGGING
+function LOGGING_assignAction(expectedT: string,gotT: string,assignedAction: AssignableAction) {
+	return `Failed to assignAction expected '${expectedT}', got '${gotT}' for ${assignedAction}`
+}
+// #endregion
+
 // #region Attributes
 enum AssignableAction {
 	/** Nothing will happen when the {@link ContextItem} is clicked(a default type). */
-	NONE,
+	NONE = "None",
 	/** The assigned function will be called when the {@link ContextItem} is clicked. */
-	FUNCTION,
+	FUNCTION = "Function",
 	/** Toggles the visibility(including Enabled) state to 'true' for either a {@link ScreenGui}, {@link Frame} or a {@link ScrollingFrame} Instance. */
-	OPEN_UI,
+	OPEN_UI = "Open_UI",
 	/** Requires the ModuleScript when the {@link ContextItem} is clicked, if it is a function returned it will be called.  */
-	RUN_MODULE
+	RUN_MODULE = "Run_Module"
 };
 type kAssignableAction = keyof typeof AssignableAction;
 
@@ -93,13 +101,6 @@ const DEFAULT_CONTEXT_ITEM_ATTRIBUTES: UIPresetAttributes & ContextItemAttribute
 };
 
 // #endregion
-
-// #region LOGGING
-function LOGGING_assignAction(expectedT: string,gotT: string,assignedAction: AssignableAction) {
-	return `Failed to assignAction expected '${expectedT}', got '${gotT}' for ${AssignableAction[assignedAction]}`
-}
-// #endregion
-
 /**
  * ContextItem is the makeup of each item available in the ContextMenu.
  */
@@ -114,7 +115,7 @@ class ContextItem extends UIPreset<
 
 	static PresetInstance = () => createContextItem();
 
-	Type = PresetTag.ContextItem;
+	presetType = PresetTag.ContextItem;
 
 // #region PRIVATE_PROP
 	/**
@@ -206,7 +207,19 @@ class ContextItem extends UIPreset<
 					}
 					return;
 				}
-				this._action = require()
+
+				// Safely require the ModuleScript
+				try {
+					const moduleReturn: unknown = require(itemActionable);
+					if (!typeIs(moduleReturn,'function')) {
+						warn(`'${enumKey<typeof AssignableAction,AssignableAction.RUN_MODULE>}' only accepts a function as it's return type.`);
+						return;
+					}
+					this._assignableAction = AssignableAction.RUN_MODULE;
+					this._action = moduleReturn;
+				} catch(err: unknown) {
+					$warn(`Something unexpected happened while running ModuleScript at:\n${ {name: itemActionable.Name, path: itemActionable.GetFullName()} }`);
+				}
 				break;
 			case AssignableAction.OPEN_UI:
 				if (t.instanceIsA("ScreenGui")(itemActionable)) {
