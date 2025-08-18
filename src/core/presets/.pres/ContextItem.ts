@@ -18,7 +18,8 @@ interface ContextItemStyle {
 }
 
 type OpenableUI = ScreenGui | Frame | ScrollingFrame
-type ContextItemActionable = Callback | ModuleScript | OpenableUI;
+const tOpentableUI = t.union(t.instanceIsA("ScreenGui"),t.instanceIsA("Frame"),t.instanceIsA("ScrollingFrame"));
+type ContextItemActionable = Callback | ModuleScript | OpenableUI
 // #endregion
 
 enum ContextItemBtnType {
@@ -62,6 +63,7 @@ function createContextItem(
 // #endregion
 
 // #region LOGGING
+/** @example `Failed to assignAction expected '${expectedT}', got '${gotT}' for ${assignedAction}` */
 function LOGGING_assignAction(expectedT: string,gotT: string,assignedAction: AssignableAction) {
 	return `Failed to assignAction expected '${expectedT}', got '${gotT}' for ${assignedAction}`
 }
@@ -128,7 +130,6 @@ class ContextItem extends UIPreset<
 	private _action?: ContextItemActionable;
 
 	private _assignableAction: AssignableAction = AssignableAction.RUN_MODULE;
-	private _values?: Array<unknown>;
 
 	private _buttonType: ContextItemBtnType = DEFAULT_BTN_TYPE;
 	private _btnConnection?: RBXScriptConnection;
@@ -194,7 +195,7 @@ class ContextItem extends UIPreset<
 				this._action = itemActionable;
 
 				// Is there any values to assign to this ContextItem?
-				if (values && values.size() > 0) this._values = values;
+				// if (values && values.size() > 0) this._values = values;
 				break;
 			case AssignableAction.RUN_MODULE:
 				// Is it not a ModuleScript?
@@ -210,33 +211,20 @@ class ContextItem extends UIPreset<
 					}
 					return;
 				}
-
-				// Safely require the ModuleScript
-				try {
-					const moduleReturn: unknown = require(itemActionable);
-					if (!typeIs(moduleReturn,'function')) {
-						warn(`'${enumKey<typeof AssignableAction,AssignableAction.RUN_MODULE>}' only accepts a function as it's return type.`);
-						return;
-					}
-					this._assignableAction = AssignableAction.RUN_MODULE;
-					this._action = moduleReturn;
-				} catch(err: unknown) {
-					$warn(`Something unexpected happened while running ModuleScript at:\n${ {name: itemActionable.Name, path: itemActionable.GetFullName()} }`);
-				}
+				this._assignableAction = AssignableAction.RUN_MODULE;
+				this._action = itemActionable;
 				break;
 			case AssignableAction.OPEN_UI:
-				if (t.instanceIsA("ScreenGui")(itemActionable)) {
-					itemActionable.Enabled = true;
-				} else if (t.instanceIsA("Frame")(itemActionable) || t.instanceIsA("ScrollingFrame")(itemActionable)) {
-					itemActionable.Visible = true;
-				} else {
-					// Is it an Instance but not the correct one?
-					if (t.Instance(itemActionable)) {
-						$warn(LOGGING_assignAction("ScreenGui | Frame | ScrollingFrame",itemActionable.ClassName,AssignableAction.OPEN_UI));
-					} else $warn(LOGGING_assignAction("Instance={ScreenGui | Frame | ScrollingFrame}",typeof itemActionable,AssignableAction.OPEN_UI));
-					this._assignableAction = AssignableAction.OPEN_UI;
-					this._action = itemActionable;
+				if (!t.Instance(itemActionable)) {
+					$warn(LOGGING_assignAction("Instance={ScreenGui | Frame | ScrollingFrame}",typeof itemActionable,AssignableAction.OPEN_UI));
+					return;
 				}
+				if (!tOpentableUI(itemActionable)) {
+					$warn(LOGGING_assignAction("ScreenGui | Frame | ScrollingFrame",itemActionable.ClassName,AssignableAction.OPEN_UI));
+					return;
+				}
+				this._assignableAction = AssignableAction.OPEN_UI;
+				this._action = itemActionable;
 				break;
 			default:
 				error(`Unknown AssignableAction actionType?`);
@@ -245,18 +233,19 @@ class ContextItem extends UIPreset<
 
 // #region PRIVATE_METH
 	private _onClick() {
+		if (!this._action) return;
+
 		switch(this._assignableAction) {
 			case AssignableAction.FUNCTION:
-				if (!this._action) return;
-
 				const action = this._action as Callback;
-				if (this._values) action(...this._values);
-				else action();
+				// if (this._values) action(...this._values);
+				action(); // was else
+				break;
 			case AssignableAction.RUN_MODULE:
-				if (!this._action) return;
+				const module = this._action as ModuleScript;
 				// Safely require the ModuleScript
 				try {
-					const moduleReturn: unknown = require(this._action as ModuleScript);
+					const moduleReturn: unknown = require(module);
 					if (!typeIs(moduleReturn,'function')) {
 						warn(`'${enumKey<typeof AssignableAction,AssignableAction.RUN_MODULE>}' only accepts a function as it's return type.`);
 						return;
@@ -264,11 +253,20 @@ class ContextItem extends UIPreset<
 					this._assignableAction = AssignableAction.RUN_MODULE;
 					this._action = moduleReturn;
 				} catch(err: unknown) {
-					$warn(`Something unexpected happened while running ModuleScript at:\n${ {name: itemActionable.Name, path: itemActionable.GetFullName()} }`);
+					$warn(`Something unexpected happened while running ModuleScript at:\n${ {name: module.Name, path: module.GetFullName()} }`);
 				}
 			case AssignableAction.OPEN_UI:
+				const openableUI = this._action as OpenableUI;
 				
+				if (t.instanceIsA("ScreenGui")(openableUI)) {
+					openableUI.Enabled = true;
+				} else if (t.instanceIsA("Frame")(openableUI) || t.instanceIsA("ScrollingFrame")(openableUI)) {
+					openableUI.Visible = true;
+				}
+				break;
 		}
+
+		// TODO: Hide the owning ContextMenu since an action has been triggered
 	}
 // #endregion
 
