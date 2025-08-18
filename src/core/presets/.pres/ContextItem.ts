@@ -7,8 +7,7 @@ import UIPresetsService from '../../..';
 import { enumKey } from '@rbxts/flamework-meta-utils';
 import { $error, $warn } from 'rbxts-transform-debug';
 import { ContextMenu } from '../../ui_components/.comps/ContextMenu';
-import { ComponentTag } from '../../ui_components/ComponentTag';
-import { UIComponent } from '../../ui_components';
+import Object from '@rbxts/object-utils';
 
 // #region TYPES
 interface ContextItemStyle {
@@ -80,6 +79,7 @@ enum AssignableAction {
 	RUN_MODULE = "Run_Module"
 };
 type kAssignableAction = keyof typeof AssignableAction;
+const tAssignableAction = t.union(...Object.values(AssignableAction).map(v => t.literal(v)));
 
 interface ContextItemAttributes {
 	/**
@@ -90,14 +90,14 @@ interface ContextItemAttributes {
 	/** The text content or an rbxassetid image for this {@link ContextItem}. */
 	up_Content: string;
 	/** This will be the assigned action of the {@link ContextItem}. */
-	upE_AssignableAction: kAssignableAction
+	upE_AssignableAction: AssignableAction
 }
 
 const DEFAULT_CONTEXT_ITEM_ATTRIBUTES: UIPresetAttributes & ContextItemAttributes = {
 	...UIPresetDefaultAttributes,
 	up_Active: true,
 	up_Content: "N/A",
-	upE_AssignableAction: "NONE"
+	upE_AssignableAction: AssignableAction.NONE
 };
 
 // #endregion
@@ -106,7 +106,10 @@ const DEFAULT_CONTEXT_ITEM_ATTRIBUTES: UIPresetAttributes & ContextItemAttribute
  */
 @Component({
 	tag: PresetTag.ContextItem,
-	defaults: DEFAULT_CONTEXT_ITEM_ATTRIBUTES as unknown as FW_Attributes
+	defaults: DEFAULT_CONTEXT_ITEM_ATTRIBUTES as unknown as FW_Attributes,
+	attributes: {
+		upE_AssignableAction: tAssignableAction
+	}
 })
 class ContextItem extends UIPreset<
 	ContextItemAttributes,
@@ -230,7 +233,9 @@ class ContextItem extends UIPreset<
 					// Is it an Instance but not the correct one?
 					if (t.Instance(itemActionable)) {
 						$warn(LOGGING_assignAction("ScreenGui | Frame | ScrollingFrame",itemActionable.ClassName,AssignableAction.OPEN_UI));
-					} else $warn(LOGGING_assignAction("Instance={ScreenGui | Frame | ScrollingFrame}",typeof itemActionable,AssignableAction.OPEN_UI))
+					} else $warn(LOGGING_assignAction("Instance={ScreenGui | Frame | ScrollingFrame}",typeof itemActionable,AssignableAction.OPEN_UI));
+					this._assignableAction = AssignableAction.OPEN_UI;
+					this._action = itemActionable;
 				}
 				break;
 			default:
@@ -248,14 +253,18 @@ class ContextItem extends UIPreset<
 				if (this._values) action(...this._values);
 				else action();
 			case AssignableAction.RUN_MODULE:
-				let src;
+				if (!this._action) return;
+				// Safely require the ModuleScript
 				try {
-					src = require(this._action as ModuleScript);
-					if (typeIs(src,"function")) {
-						src();
+					const moduleReturn: unknown = require(this._action as ModuleScript);
+					if (!typeIs(moduleReturn,'function')) {
+						warn(`'${enumKey<typeof AssignableAction,AssignableAction.RUN_MODULE>}' only accepts a function as it's return type.`);
+						return;
 					}
-				} catch(err) {
-					$warn(`Failed to RUN_MODULE with`);
+					this._assignableAction = AssignableAction.RUN_MODULE;
+					this._action = moduleReturn;
+				} catch(err: unknown) {
+					$warn(`Something unexpected happened while running ModuleScript at:\n${ {name: itemActionable.Name, path: itemActionable.GetFullName()} }`);
 				}
 			case AssignableAction.OPEN_UI:
 				
