@@ -65,7 +65,7 @@ class UIPresetsService implements OnStart {
 			instance,
 			ComponentRegistry[tag] as unknown as ConstructorRef<T>
 		);
-		this._components.set(component.UUID,component);
+		this._components.set(component.attributes.up_UUID,component);
 		return component;
 	}
 
@@ -84,7 +84,7 @@ class UIPresetsService implements OnStart {
 			instance,
 			presetClass as unknown as ConstructorRef<T>
 		);
-		this._components.set(component.UUID,component);
+		this._components.set(component.attributes.up_UUID,component);
 		return component;
 	}
 
