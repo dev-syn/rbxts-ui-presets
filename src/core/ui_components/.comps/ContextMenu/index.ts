@@ -2,7 +2,7 @@ import { Component } from '@flamework/components';
 import { t } from '@rbxts/t';
 import { OnStart } from '@flamework/core';
 import type UIPresetsService from '../../../..';
-import { FW_Attributes } from '../../../../typings';
+import { Button, FW_Attributes } from '../../../../typings';
 import { ContextItem } from '../../../presets/.pres/ContextItem';
 import { ConfigurationComponent } from '@rbxts/syn-utils';
 import { UIComponent } from '../..';
@@ -75,19 +75,17 @@ const DEFAULT_CONTEXT_MENU_ATTRIBUTES: UIPresetAttributes & ContextMenuAttribute
  */
 class ContextMenu extends UIComponent<
 	ContextMenuAttributes,
-	GuiObject 
+	Button 
 > implements OnStart {
 
 // #region STATIC
-	static PresetInstance = () => createContextMenu();
-
-	/** The {@link ScreenGui} of this ContextMenu. */
+	/** The {@link ScreenGui} Instance that will hold all the ContextMenu objects. */
 	static ContextMenuUI: ScreenGui = new Instance("ScreenGui");
 
 	/** A {@link TextLabel} for checking if text fits within a label. */
 	static TextFitsLabel: TextLabel = new Instance("TextLabel");
 	
-	/** Whether only one context menu can be showed at a time. */
+	/** Whether only one or many context menu objects can be shown at a time. */
 	static OnlySingleContext: boolean = true;
 
 	/** The previous or current ContentMenu that is showed on screen. */
