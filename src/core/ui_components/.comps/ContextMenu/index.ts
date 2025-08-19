@@ -135,7 +135,6 @@ class ContextMenu extends UIComponent<
 			ContextMenu.ContextMenuUI.Name = "UIPresets_ContextMenu";
 			ContextMenu.ContextMenuUI.DisplayOrder = _uiPresetsService.HighestUIOrder + 1;
 			ContextMenu.ContextMenuUI.ResetOnSpawn = false;
-
 			ContextMenu.ContextMenuUI.Parent = game.GetService("Players").LocalPlayer.WaitForChild("PlayerGui");
 		}
 
