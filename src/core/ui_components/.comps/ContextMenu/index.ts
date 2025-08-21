@@ -3,10 +3,12 @@ import { t } from '@rbxts/t';
 import { OnStart } from '@flamework/core';
 import type UIPresetsService from '../../../..';
 import { Button, FW_Attributes } from '../../../../typings';
-import { ContextItem } from '../../../presets/.pres/ContextItem';
+import type { ContextItem, ContextItemBtnType } from '../../../presets/.pres/ContextItem';
 import { ConfigurationComponent } from '@rbxts/syn-utils';
-import { UIComponent } from '../..';
+import { UIComponent, UIComponentAttributes, UIComponentDefaultAttributes } from '../..';
 import { ComponentTag } from '../../ComponentTag';
+import { RunService } from '@rbxts/services';
+import Object from '@rbxts/object-utils';
 
 // #region Preset_ContextMenu
 type Preset_ContextMenu = Frame & {}
@@ -23,20 +25,23 @@ function createContextMenu(): Preset_ContextMenu {
 
 /**
  * @enum {number}
- * The TextSizingMode enum contains modes that affect the text sizing of the @see {@link ContextItem} title text.
+ * The TextSizingMode enum contains modes that influence text sizing of the {@link ContextItem} instances.
  */
 enum TextSizingMode {
-	/** This sizing mode goes through all the context item texts and finds the lowest text size where all items would fit. This mode has a built-in fixed padding on those text sizes.*/
-	MinimumCommon,
-	/** This mode uses the @see {@link ContextMenu.textSizeScaler} property which is a scale modifier for the Owner text size. */
-	Scaled
+	/**
+	 * This sizing mode goes through all the ContextItem text properties and
+	 * finds the lowest text size where all items would fit.
+	 * This mode has a built-in fixed padding on those text sizes.
+	 */
+	MinimumCommon = "MinimumCommon",
+	/**
+	 * This mode uses the {@link ContextMenu.textSizeScaler} property which is a scale modifier
+	 * that will be influenced on this components owning {@link Instance}.
+	 * This mode will only work with {@link TextButton} owners though.
+	 */
+	Scaled = "Scaled"
 }
-
-type vTextSizingMode = keyof typeof TextSizingMode
-const tTextSizingMode = t.interface({
-	MinimumCommon: t.number,
-	Scaled: t.number
-});
+const tTextSizingMode = t.union(...Object.values(TextSizingMode).map(v => t.literal(v)));
 
 // #endregion
 
@@ -45,19 +50,20 @@ const tTextSizingMode = t.interface({
  * These are the options that can be passed to ContextMenu to change default ContextMenu behavior.
  */
 interface MenuOptions {
-	/** This only affects TextButton {@link ContextItem.instance} instances. */
+	/** This only affects {@link ContextItem} components attached to {@link ImageButton} instances. */
 	textSizingMode: TextSizingMode;
 }
 
 // #region Attributes
 interface ContextMenuAttributes {
+	/** A Vector2 which contains the scale modifier of the {@link ContextMenu.} */
 	up_ItemSize: Vector2,
 	/** A scaler modifier number that will affect the {@link ContextMenu.TextSize} of each  */
 	up_TextSizeScalar: number
 }
 
-const DEFAULT_CONTEXT_MENU_ATTRIBUTES: UIPresetAttributes & ContextMenuAttributes = {
-	...UIPresetDefaultAttributes,
+const DEFAULT_CONTEXT_MENU_ATTRIBUTES: UIComponentAttributes & ContextMenuAttributes = {
+	...UIComponentDefaultAttributes,
 	up_ItemSize: new Vector2(1,1),
 	up_TextSizeScalar: 1
 };
@@ -81,9 +87,6 @@ class ContextMenu extends UIComponent<
 // #region STATIC
 	/** The {@link ScreenGui} Instance that will hold all the ContextMenu objects. */
 	static ContextMenuUI: ScreenGui = new Instance("ScreenGui");
-
-	/** A {@link TextLabel} for checking if text fits within a label. */
-	static TextFitsLabel: TextLabel = new Instance("TextLabel");
 	
 	/** Whether only one or many context menu objects can be shown at a time. */
 	static OnlySingleContext: boolean = true;
@@ -94,7 +97,7 @@ class ContextMenu extends UIComponent<
 
 	componentType = ComponentTag.ContextMenu;
 
-	Options: MenuOptions = {
+	options: MenuOptions = {
 			textSizingMode: TextSizingMode.MinimumCommon
 	};
 
@@ -114,11 +117,6 @@ class ContextMenu extends UIComponent<
 	 * The ContextItems that belong to this ContextMenu.
 	 */
 	private _contexts: ContextItem[] = [];
-	/**
-	 * @private
-	 * The connections that belong to this ContextMenu.
-	 */
-	private _connections: RBXScriptConnection[] = [];
 // #endregion
 
 	/**
@@ -138,11 +136,6 @@ class ContextMenu extends UIComponent<
 			ContextMenu.ContextMenuUI.Parent = game.GetService("Players").LocalPlayer.WaitForChild("PlayerGui");
 		}
 
-		if (!ContextMenu.TextFitsLabel.Parent) {
-			ContextMenu.TextFitsLabel.Position = new UDim2(2,0,2,0);
-			ContextMenu.TextFitsLabel.Parent = ContextMenu.ContextMenuUI;
-		}
-
 		// When the HighestDisplayOrder is changed update the ContextMenuSG DisplayOrder
 		_uiPresetsService.OnUIOrderChanged.Connect((newOrder: number) => ContextMenu.ContextMenuUI.DisplayOrder = newOrder + 1);
 	}
@@ -154,19 +147,17 @@ class ContextMenu extends UIComponent<
 		this.instance.Visible = true;
 
 		// When the trigger element is right clicked draw and display the context menu
-		this._connections.push(
-			this.instance.MouseButton2Click.Connect(() => {
-					if (ContextMenu.onlySingleContext && ContextMenu._previousMenu && ContextMenu._previousMenu !== this)
-						ContextMenu._previousMenu.menuBG.Parent = undefined;
-					if (!this.menuBG.Parent) {
-						this.Draw();
-						this.menuBG.Parent = ContextMenu.contextMenuSG;
-					} else {
-						this.menuBG.Parent = undefined;
-						if (ContextMenu._previousMenu === this) ContextMenu._previousMenu = undefined;
-					}
-			})
-		);
+		this.instance.MouseButton2Click.Connect(() => {
+			if (ContextMenu.OnlySingleContext && ContextMenu._lastActiveMenu && ContextMenu._lastActiveMenu !== this)
+				ContextMenu._lastActiveMenu.menuBG.Parent = undefined;
+			if (!this.menuBG.Parent) {
+				this.Draw();
+				this.menuBG.Parent = ContextMenu.contextMenuSG;
+			} else {
+				this.menuBG.Parent = undefined;
+				if (ContextMenu._previousMenu === this) ContextMenu._previousMenu = undefined;
+			}
+		});
 		
 		// When the trigger element's position is changed, redraw the context menu.
 		this._connections.push(
@@ -184,7 +175,7 @@ class ContextMenu extends UIComponent<
 		if (!this._itemTextSize) this.updateTextSize();
 
 		// Get the updated screen size
-		this.viewSize = ContextMenu.contextMenuSG.AbsoluteSize;
+		this._viewSize = ContextMenu.ContextMenuUI.AbsoluteSize;
 
 		const activeContexts: ContextItem[] = this.GetActiveContexts();
 		const contextSize: number = activeContexts.size();
@@ -192,11 +183,13 @@ class ContextMenu extends UIComponent<
 		// If no context; don't draw anything
 		if (contextSize === 0) return;
 
+		const itemSize: Vector2 = this.attributes.up_ItemSize;
+
 		// If minItemSizeX was set to zero, assign it 1
-		if (this.itemSize.X === 0) this.itemSize = this.itemSize.add(new Vector2(1,this.itemSize.Y));
+		if (itemSize.X === 0) this.attributes.up_ItemSize = itemSize.add(new Vector2(1,itemSize.Y));
 
 		// If minItemSizeY was set to zero, assign it 1
-		if (this.itemSize.Y === 0) this.itemSize = this.itemSize.add(new Vector2(this.itemSize.X,1));
+		if (itemSize.Y === 0) this.attributes.up_ItemSize= itemSize.add(new Vector2(itemSize.X,1));
 
 		const owner: Button = this.instance;
 
@@ -204,9 +197,9 @@ class ContextMenu extends UIComponent<
 		const absPosY: number = owner.AbsolutePosition.Y;
 
 		// The minimum absolute size of each context item
-		const itemAbsSizeY: number = math.ceil(this.itemSize.Y * absSizeY);
+		const itemAbsSizeY: number = math.ceil(itemSize.Y * absSizeY);
 		// Get the used amount of space on the x axis in pixels of each context item
-		const itemAbsSizeX: number = math.ceil(this.itemSize.X * owner.AbsoluteSize.X);
+		const itemAbsSizeX: number = math.ceil(itemSize.X * owner.AbsoluteSize.X);
 
 		const yAnchor: number = owner.AnchorPoint.Y;
 		
@@ -281,12 +274,12 @@ class ContextMenu extends UIComponent<
 // #endregion
 		// Parent each context item button to the MenuBG
 		activeContexts.forEach(c => {
-				if (c.Btn.IsA("TextButton")) c.Btn.TextSize = this._itemTextSize!;
+				if (c.getButtonType() === ContextItemBtnType.TextBtn) (c.instance as TextButton).TextSize = this._itemTextSize!;
 				
-				c.Btn.Parent = this.menuBG;
+				c.instance.Parent = this.menuBG;
 		});
 
-		ContextMenu._previousMenu = this;
+		ContextMenu._lastActiveMenu = this;
 	}
 
 	/** Goes through each active @see {@link ContextItem} and uses it's text to determine a minimum size fit and will return the minimum fit and assign that to all ContextItem's. */
@@ -298,7 +291,7 @@ class ContextMenu extends UIComponent<
 		tl.Size = new UDim2(0,absX,0,absY);
 
 		for (const item of this.GetActiveContexts()) {
-			if (!item.Btn.IsA("TextButton")) continue;
+			if (item.getButtonType() !== ContextItemBtnType.TextBtn) continue;
 
 			tl.Text = item.Name;
 
