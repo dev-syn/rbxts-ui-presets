@@ -23,10 +23,9 @@ type ContextItemActionable = Callback | ModuleScript | OpenableUI
 // #endregion
 
 enum ContextItemBtnType {
-	TextBtn,
-	ImageBtn
+	TextBtn = "TextButton",
+	ImageBtn = "ImageButton"
 }
-type vContextItemBtn = keyof typeof ContextItemBtnType;
 
 const DEFAULT_BTN_TYPE: ContextItemBtnType = ContextItemBtnType.TextBtn;
 
@@ -40,10 +39,7 @@ function createContextItem(
 	btnType: ContextItemBtnType = DEFAULT_BTN_TYPE,
 	content: string = "N/A"): Preset_ContextItem {
 	
-	const btn: Button = new Instance(
-		btnType === ContextItemBtnType.TextBtn
-		? "TextButton" : "ImageButton"
-	);
+	const btn: Button = new Instance(btnType);
 
 	btn.BackgroundColor3 = Color3.fromRGB(64,64,64);
 	btn.AutoButtonColor = true;
@@ -80,7 +76,6 @@ enum AssignableAction {
 	/** Requires the ModuleScript when the {@link ContextItem} is clicked, if it is a function returned it will be called.  */
 	RUN_MODULE = "Run_Module"
 };
-type kAssignableAction = keyof typeof AssignableAction;
 const tAssignableAction = t.union(...Object.values(AssignableAction).map(v => t.literal(v)));
 
 interface ContextItemAttributes {
@@ -229,6 +224,10 @@ class ContextItem extends UIPreset<
 			default:
 				error(`Unknown AssignableAction actionType?`);
 		}
+	}
+
+	getButtonType(): ContextItemBtnType {
+		return this._buttonType;
 	}
 
 // #region PRIVATE_METH
