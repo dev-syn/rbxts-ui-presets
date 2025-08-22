@@ -54,7 +54,11 @@ interface MenuOptions {
 	textSizingMode: TextSizingMode;
 }
 
-// #region Attributes
+// #region Attributes & Config
+interface ContextMenuConfiguration {
+	menuBG: Preset_ContextMenu
+}
+
 interface ContextMenuAttributes {
 	/** A Vector2 which contains the scale modifier of the {@link ContextMenu.} */
 	up_ItemSize: Vector2,
@@ -73,7 +77,7 @@ const DEFAULT_CONTEXT_MENU_ATTRIBUTES: UIComponentAttributes & ContextMenuAttrib
 	tag: ComponentTag.ContextMenu,
 	defaults: DEFAULT_CONTEXT_MENU_ATTRIBUTES as unknown as FW_Attributes,
 	configuration: {
-		TriggerElement: t.union(t.instanceIsA("TextButton"),t.instanceIsA("ImageButton"))
+		menuBG: t.instanceIsA("Frame")
 	}
 })
 /**
@@ -92,7 +96,7 @@ class ContextMenu extends UIComponent<
 	static OnlySingleContext: boolean = true;
 
 	/** The previous or current ContentMenu that is showed on screen. */
-	private static _lastActiveMenu?: ContextMenu = undefined;
+	private static _LastActiveMenu?: ContextMenu = undefined;
 // #endregion
 
 	componentType = ComponentTag.ContextMenu;
@@ -102,6 +106,11 @@ class ContextMenu extends UIComponent<
 	};
 
 // #region PRIVATE
+	/**
+	 * @private
+	 * This is a decorator assigned property, and will assign the configuration. 
+	 */
+	private _configuration!: ContextMenuConfiguration;
 	/**
 	 * @private
 	 * Stores the common text size of each active context item.
@@ -120,9 +129,7 @@ class ContextMenu extends UIComponent<
 // #endregion
 
 	/**
-	 * Constructs a new ContextMenu object.
-	 * @param Owner - The button element that triggers this ContextMenu.
-	 * @param contexts - The ContextItems that belong to this ContextMenu. Note: This is more performant than calling @see {@link ContextMenu.AddContext} on each ContextItem.
+	 * Constructs a new ContextMenu
 	 */
 	constructor(
 		_uiPresetsService: UIPresetsService
@@ -148,14 +155,15 @@ class ContextMenu extends UIComponent<
 
 		// When the trigger element is right clicked draw and display the context menu
 		this.instance.MouseButton2Click.Connect(() => {
-			if (ContextMenu.OnlySingleContext && ContextMenu._lastActiveMenu && ContextMenu._lastActiveMenu !== this)
-				ContextMenu._lastActiveMenu.menuBG.Parent = undefined;
+			if (ContextMenu.OnlySingleContext && ContextMenu._LastActiveMenu && ContextMenu._LastActiveMenu !== this)
+				
+				ContextMenu._LastActiveMenu._configuration.menuBG.Parent = undefined;
 			if (!this.menuBG.Parent) {
 				this.Draw();
 				this.menuBG.Parent = ContextMenu.contextMenuSG;
 			} else {
 				this.menuBG.Parent = undefined;
-				if (ContextMenu._previousMenu === this) ContextMenu._previousMenu = undefined;
+				if (ContextMenu._LastActiveMenu === this) ContextMenu._LastActiveMenu = undefined;
 			}
 		});
 		
@@ -279,7 +287,7 @@ class ContextMenu extends UIComponent<
 				c.instance.Parent = this.menuBG;
 		});
 
-		ContextMenu._lastActiveMenu = this;
+		ContextMenu._LastActiveMenu = this;
 	}
 
 	/** Goes through each active @see {@link ContextItem} and uses it's text to determine a minimum size fit and will return the minimum fit and assign that to all ContextItem's. */
