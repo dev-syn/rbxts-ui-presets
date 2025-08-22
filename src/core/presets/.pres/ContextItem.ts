@@ -263,6 +263,8 @@ class ContextItem extends UIPreset<
 					openableUI.Visible = true;
 				}
 				break;
+			default:
+				$warn(`Unknown AssignableAction: '${this._assignableAction}'`);
 		}
 
 		// TODO: Hide the owning ContextMenu since an action has been triggered
