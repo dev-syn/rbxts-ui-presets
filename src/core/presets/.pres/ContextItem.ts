@@ -5,7 +5,7 @@ import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '..';
 import { t } from '@rbxts/t';
 import UIPresetsService from '../../..';
 import { enumKey } from '@rbxts/flamework-meta-utils';
-import { $error, $warn } from 'rbxts-transform-debug';
+import { $warn } from 'rbxts-transform-debug';
 import { ContextMenu } from '../../ui_components/.comps/ContextMenu';
 import Object from '@rbxts/object-utils';
 
