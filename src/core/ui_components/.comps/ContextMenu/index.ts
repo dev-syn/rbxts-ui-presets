@@ -1,17 +1,18 @@
-import { Component } from '@flamework/components';
 import { t } from '@rbxts/t';
 import { OnStart } from '@flamework/core';
 import type UIPresetsService from '../../../..';
 import { Button, FW_Attributes } from '../../../../typings';
 import type { ContextItem, ContextItemBtnType } from '../../../presets/.pres/ContextItem';
-import { ConfigurationComponent } from '@rbxts/syn-utils';
+import { Configurable, SchemaToType } from '@rbxts/syn-utils';
 import { UIComponent, UIComponentAttributes, UIComponentDefaultAttributes } from '../..';
 import { ComponentTag } from '../../ComponentTag';
 import { RunService } from '@rbxts/services';
 import Object from '@rbxts/object-utils';
+import { Component } from '@flamework/components';
 
 // #region Preset_ContextMenu
 type Preset_ContextMenu = Frame & {}
+const tPreset_ContextMenu = t.intersection(t.instanceIsA("Frame"),t.children({}));
 
 function createContextMenu(): Preset_ContextMenu {
 	const menuBG = new Instance("Frame") as Preset_ContextMenu;
@@ -54,10 +55,10 @@ interface MenuOptions {
 	textSizingMode: TextSizingMode;
 }
 
-// #region Attributes & Config
-interface ContextMenuConfiguration {
-	menuBG: Preset_ContextMenu
-}
+// #region INIT_COMPONENT
+const ContextMenuSchema = {
+	menuBG: tPreset_ContextMenu
+};
 
 interface ContextMenuAttributes {
 	/** A Vector2 which contains the scale modifier of the {@link ContextMenu.} */
@@ -73,12 +74,12 @@ const DEFAULT_CONTEXT_MENU_ATTRIBUTES: UIComponentAttributes & ContextMenuAttrib
 };
 
 // #endregion
-@ConfigurationComponent({
+@Component({
 	tag: ComponentTag.ContextMenu,
-	defaults: DEFAULT_CONTEXT_MENU_ATTRIBUTES as unknown as FW_Attributes,
-	configuration: {
-		menuBG: t.instanceIsA("Frame")
-	}
+	defaults: DEFAULT_CONTEXT_MENU_ATTRIBUTES as unknown as FW_Attributes
+})
+@Configurable({
+	schema: ContextMenuSchema
 })
 /**
  * This is a component which should 
@@ -99,18 +100,14 @@ class ContextMenu extends UIComponent<
 	private static _LastActiveMenu?: ContextMenu = undefined;
 // #endregion
 
+	/** A decorator assigned property storing this components configuration. */
+	configuration!: SchemaToType<typeof ContextMenuSchema>;
 	componentType = ComponentTag.ContextMenu;
-
 	options: MenuOptions = {
 			textSizingMode: TextSizingMode.MinimumCommon
 	};
 
 // #region PRIVATE
-	/**
-	 * @private
-	 * This is a decorator assigned property, and will assign the configuration. 
-	 */
-	private _configuration!: ContextMenuConfiguration;
 	/**
 	 * @private
 	 * Stores the common text size of each active context item.
@@ -135,7 +132,7 @@ class ContextMenu extends UIComponent<
 		_uiPresetsService: UIPresetsService
 	) {
 		super(_uiPresetsService);
-
+		
 		if (!ContextMenu.ContextMenuUI.Parent) {
 			ContextMenu.ContextMenuUI.Name = "UIPresets_ContextMenu";
 			ContextMenu.ContextMenuUI.DisplayOrder = _uiPresetsService.HighestUIOrder + 1;
