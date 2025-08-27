@@ -2,11 +2,11 @@ import { t } from '@rbxts/t';
 import { OnStart } from '@flamework/core';
 import type UIPresetsService from '../../../..';
 import { Button, FW_Attributes } from '../../../../typings';
-import type { ContextItem, ContextItemBtnType } from '../../../presets/.pres/ContextItem';
+import { ContextItem, ContextItemBtnType } from '../../../presets/.pres/ContextItem';
 import { Configurable, SchemaToType } from '@rbxts/syn-utils';
 import { UIComponent, UIComponentAttributes, UIComponentDefaultAttributes } from '../..';
 import { ComponentTag } from '../../ComponentTag';
-import { RunService } from '@rbxts/services';
+import { ContentProvider, RunService, TextService } from '@rbxts/services';
 import Object from '@rbxts/object-utils';
 import { Component } from '@flamework/components';
 
@@ -46,13 +46,27 @@ const tTextSizingMode = t.union(...Object.values(TextSizingMode).map(v => t.lite
 
 // #endregion
 
+interface MenuStyle {
+	/** The Font that will be used for each {@link ContextItem} that belongs to this menu. */
+	font: Font
+}
+
+/** The static shared options of the {@link ContextMenu} */
+interface SharedMenuOptions {
+	/** Whether only one or many context menu objects can be shown at a time. */
+	onlySingleContext: boolean;
+	/** The default style for all {@link ContextMenu} objects. */
+	style: MenuStyle;
+}
+
 /**
- * @interface
- * These are the options that can be passed to ContextMenu to change default ContextMenu behavior.
+ * These are the options that can be configured to {@link ContextMenu} changing the default behavior.
  */
 interface MenuOptions {
-	/** This only affects {@link ContextItem} components attached to {@link ImageButton} instances. */
+	/** This only affects {@link ContextItem} components attached to {@link TextButton} instances. */
 	textSizingMode: TextSizingMode;
+	/** The style that belongs to this {@link ContextMenu} */
+	style: MenuStyle
 }
 
 // #region INIT_COMPONENT
@@ -92,19 +106,30 @@ class ContextMenu extends UIComponent<
 // #region STATIC
 	/** The {@link ScreenGui} Instance that will hold all the ContextMenu objects. */
 	static ContextMenuUI: ScreenGui = new Instance("ScreenGui");
-	
-	/** Whether only one or many context menu objects can be shown at a time. */
-	static OnlySingleContext: boolean = true;
+
+	static SharedOptions: SharedMenuOptions = {
+		onlySingleContext: true,
+		style: {
+			font: new Font("rbxasset://fonts/families/Roboto.json")
+		}
+	}
 
 	/** The previous or current ContentMenu that is showed on screen. */
 	private static _LastActiveMenu?: ContextMenu = undefined;
+
+	static {
+		ContentProvider.PreloadAsync([ContextMenu.SharedOptions.style.font as unknown as Instance])
+	}
 // #endregion
 
 	/** A decorator assigned property storing this components configuration. */
 	configuration!: SchemaToType<typeof ContextMenuSchema>;
 	componentType = ComponentTag.ContextMenu;
 	options: MenuOptions = {
-			textSizingMode: TextSizingMode.MinimumCommon
+			textSizingMode: TextSizingMode.MinimumCommon,
+			style: {
+				font: new Font("rbxasset://fonts/families/Roboto.json")
+			}
 	};
 
 // #region PRIVATE
@@ -154,22 +179,20 @@ class ContextMenu extends UIComponent<
 		this.instance.MouseButton2Click.Connect(() => {
 			if (ContextMenu.OnlySingleContext && ContextMenu._LastActiveMenu && ContextMenu._LastActiveMenu !== this)
 				
-				ContextMenu._LastActiveMenu._configuration.menuBG.Parent = undefined;
-			if (!this.menuBG.Parent) {
+				ContextMenu._LastActiveMenu.configuration.menuBG.Parent = undefined;
+			if (!this.configuration.menuBG.Parent) {
 				this.Draw();
-				this.menuBG.Parent = ContextMenu.contextMenuSG;
+				this.configuration.menuBG.Parent = ContextMenu.ContextMenuUI;
 			} else {
-				this.menuBG.Parent = undefined;
+				this.configuration.menuBG.Parent = undefined;
 				if (ContextMenu._LastActiveMenu === this) ContextMenu._LastActiveMenu = undefined;
 			}
 		});
 		
 		// When the trigger element's position is changed, redraw the context menu.
-		this._connections.push(
+		this.maid.GiveTask(
 			this.instance.GetPropertyChangedSignal("Position").Connect(() => this.Draw())
 		);
-
-		this._connections.push(this.instance.Destroying.Once(() => this.Destroy()));
 	}
 
 	/**
@@ -189,13 +212,12 @@ class ContextMenu extends UIComponent<
 		if (contextSize === 0) return;
 
 		const itemSize: Vector2 = this.attributes.up_ItemSize;
-
 		// If minItemSizeX was set to zero, assign it 1
 		if (itemSize.X === 0) this.attributes.up_ItemSize = itemSize.add(new Vector2(1,itemSize.Y));
-
 		// If minItemSizeY was set to zero, assign it 1
-		if (itemSize.Y === 0) this.attributes.up_ItemSize= itemSize.add(new Vector2(itemSize.X,1));
+		if (itemSize.Y === 0) this.attributes.up_ItemSize = itemSize.add(new Vector2(itemSize.X,1));
 
+		const menuBG = this.configuration.menuBG;
 		const owner: Button = this.instance;
 
 		const absSizeY: number = owner.AbsoluteSize.Y;
@@ -216,7 +238,7 @@ class ContextMenu extends UIComponent<
 
 // #region Row_Columns
 		// Is the trigger element positioned over half the y screen
-		const isSizeOverHalfY: boolean = absPosY > this.viewSize.Y / 2;
+		const isSizeOverHalfY: boolean = absPosY > this._viewSize.Y / 2;
 
 		let availableYPixels: number;
 		if (isSizeOverHalfY) {
@@ -224,7 +246,7 @@ class ContextMenu extends UIComponent<
 			availableYPixels = topAbsPosY;
 		} else {
 			// Check how much space is available going down
-			availableYPixels = this.viewSize.Y - topAbsPosY;
+			availableYPixels = this._viewSize.Y - topAbsPosY;
 		}
 
 		// Calculate the rows available from the (minimum size / available pixels)
@@ -241,20 +263,20 @@ class ContextMenu extends UIComponent<
 				columns = math.ceil(contextSize / rows);
 
 		// Set the size of MenuBG x based on amount of columns and y based on rows
-		this.menuBG.Size = new UDim2(0,columns * itemAbsSizeX,0,rows * itemAbsSizeY);
+		menuBG.Size = new UDim2(0,columns * itemAbsSizeX,0,rows * itemAbsSizeY);
 
 		// Calculate the right absolute position of the trigger element
 		const rightAbsPosX: number = leftAbsPosX + itemAbsSizeX;
 
-		const isSizeOverHalfX: boolean = leftAbsPosX > this.viewSize.X / 2;
+		const isSizeOverHalfX: boolean = leftAbsPosX > this._viewSize.X / 2;
 
-		this.menuBG.Position = new UDim2(
+		menuBG.Position = new UDim2(
 			0,
-			isSizeOverHalfX ? leftAbsPosX - this.menuBG.AbsoluteSize.X
+			isSizeOverHalfX ? leftAbsPosX - menuBG.AbsoluteSize.X
 			: rightAbsPosX + (owner.AbsoluteSize.X - itemAbsSizeX),
 			0,
 			isSizeOverHalfY ?
-			(topAbsPosY + -(this.menuBG.AbsoluteSize.Y - math.ceil(( 1 / this.itemSize.Y) * itemAbsSizeY)))
+			(topAbsPosY + -(menuBG.AbsoluteSize.Y - math.ceil(( 1 / this._viewSize.Y) * itemAbsSizeY)))
 			: topAbsPosY
 		);
 
@@ -269,9 +291,9 @@ class ContextMenu extends UIComponent<
 					// If out of items then break
 					if (!item) break;
 					
-					item.Btn.Size = new UDim2(0,itemAbsSizeX,0,itemAbsSizeY);
-					item.Btn.Position = lastPos.add(new UDim2(0,0,0,itemAbsSizeY));
-					lastPos = item.Btn.Position;
+					item.instance.Size = new UDim2(0,itemAbsSizeX,0,itemAbsSizeY);
+					item.instance.Position = lastPos.add(new UDim2(0,0,0,itemAbsSizeY));
+					lastPos = item.instance.Position;
 					itemIndex++;
 				}
 				lastPos = new UDim2(0,itemAbsSizeX * (columnIndex + 1),0,-itemAbsSizeY);
@@ -281,22 +303,32 @@ class ContextMenu extends UIComponent<
 		activeContexts.forEach(c => {
 				if (c.getButtonType() === ContextItemBtnType.TextBtn) (c.instance as TextButton).TextSize = this._itemTextSize!;
 				
-				c.instance.Parent = this.menuBG;
+				c.instance.Parent = this.configuration.menuBG;
 		});
 
 		ContextMenu._LastActiveMenu = this;
 	}
 
-	/** Goes through each active @see {@link ContextItem} and uses it's text to determine a minimum size fit and will return the minimum fit and assign that to all ContextItem's. */
+	/**
+	 * Goes through each active {@link ContextItem} and uses it's text to determine
+	 * a minimum size fit and will return the minimum fit and assign that to all {@link ContextItem}
+	 */
 	GetCommonTextSize(absX: number, absY: number): number {
 		let commonSize: number = 80;
 
-		const tl: TextLabel = ContextMenu.textFitLabel;
+		const tl: TextLabel;
 		tl.TextSize = commonSize;
 		tl.Size = new UDim2(0,absX,0,absY);
 
 		for (const item of this.GetActiveContexts()) {
 			if (item.getButtonType() !== ContextItemBtnType.TextBtn) continue;
+
+			const font = new Font(Enum.Font.Gotham.Name);
+
+			const textParams = new Instance("GetTextBoundsParams");
+			textParams.Text = item.attributes.up_Content;
+			textParams.Font = 
+			TextService.GetTextBoundsAsync()
 
 			tl.Text = item.Name;
 
@@ -353,17 +385,19 @@ class ContextMenu extends UIComponent<
 		const owner = this.instance;
 		if (!t.instanceIsA('TextButton')(owner)) return;
 
-		if (this.Options.textSizingMode === TextSizingMode.MinimumCommon) {
+		if (this.options.textSizingMode === TextSizingMode.MinimumCommon) {
+			const itemSize = this.attributes.up_ItemSize;
+
 			// The minimum absolute size of each context item on the y axis
-			const itemAbsSizeY: number = math.ceil(this.ItemSize.Y * owner.AbsoluteSize.Y);
+			const itemAbsSizeY: number = math.ceil(itemSize.Y * owner.AbsoluteSize.Y);
 
 			// The minimum absolute size of each context item on the x axis
-			const itemAbsSizeX: number = math.ceil(this.ItemSize.X * owner.AbsoluteSize.X);
+			const itemAbsSizeX: number = math.ceil(itemSize.X * owner.AbsoluteSize.X);
 
 			this._itemTextSize = this.GetCommonTextSize(itemAbsSizeX,itemAbsSizeY);
 		}
-		else if (this.Options.textSizingMode === TextSizingMode.Scaled)
-			this._itemTextSize = this.TextSizeScaler * owner.TextSize;
+		else if (this.options.textSizingMode === TextSizingMode.Scaled)
+			this._itemTextSize = this.attributes.up_TextSizeScalar * owner.TextSize;
 	}
 
 }
