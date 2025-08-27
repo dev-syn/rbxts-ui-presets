@@ -1,4 +1,4 @@
-import { Component } from '@flamework/components';
+import { BaseComponent, Component } from '@flamework/components';
 import { Button, FW_Attributes } from '../../../typings';
 import { PresetTag } from '../PresetTag';
 import { UIPreset, UIPresetAttributes, UIPresetDefaultAttributes } from '..';
@@ -6,8 +6,9 @@ import { t } from '@rbxts/t';
 import UIPresetsService from '../../..';
 import { enumKey } from '@rbxts/flamework-meta-utils';
 import { $warn } from 'rbxts-transform-debug';
-import { ContextMenu } from '../../ui_components/.comps/ContextMenu';
+import type { ContextMenu } from '../../ui_components/.comps/ContextMenu';
 import Object from '@rbxts/object-utils';
+import { ComponentTag } from '../../ui_components/ComponentTag';
 
 // #region TYPES
 interface ContextItemStyle {
@@ -21,6 +22,12 @@ type OpenableUI = ScreenGui | Frame | ScrollingFrame
 const tOpentableUI = t.union(t.instanceIsA("ScreenGui"),t.instanceIsA("Frame"),t.instanceIsA("ScrollingFrame"));
 type ContextItemActionable = Callback | ModuleScript | OpenableUI
 // #endregion
+
+function isContextMenu(comp: BaseComponent)
+: comp is ContextMenu {
+	return comp.instance
+	.HasTag(ComponentTag.ContextMenu);
+}
 
 enum ContextItemBtnType {
 	TextBtn = "TextButton",
@@ -39,6 +46,7 @@ function createContextItem(
 	btnType: ContextItemBtnType = DEFAULT_BTN_TYPE,
 	content: string = "N/A"): Preset_ContextItem {
 	
+	// TODO: Validate when the btnType=ImageButton that the context is a string starting with an rbxassetid path or warn the user
 	const btn: Button = new Instance(btnType);
 
 	btn.BackgroundColor3 = Color3.fromRGB(64,64,64);
@@ -47,11 +55,12 @@ function createContextItem(
 
 	if (btnType === ContextItemBtnType.TextBtn) {
 		const tb = btn as TextButton;
+		tb.TextXAlignment = Enum.TextXAlignment.Center;
 		tb.TextColor3 = Color3.fromRGB(255,255,255);
 		tb.Text = content;
 	} else {
-		const tl = btn as ImageButton;
-		tl.Image = content;
+		const ib = btn as ImageButton;
+		ib.Image = content;
 	}
 	return btn;
 }
@@ -165,11 +174,11 @@ class ContextItem extends UIPreset<
 		}
 	}
 
-	setOwner(menu: ContextMenu): void {
-		if (!(menu instanceof ContextMenu)) {
-			return $warn(`Invalid type provided for the ContextItem owner. Got ${typeOf(menu)}, expected: 'ContextMenu'`);
+	setOwner(comp: BaseComponent): void {
+		if (!isContextMenu(comp)) {
+			return $warn(`Invalid type provided for the ContextItem owner. Got ${typeOf(comp)}, expected: 'ContextMenu'`);
 		}
-		this._owner = menu;
+		this._owner = comp as unknown as ContextMenu;
 	}
 
 	/**
