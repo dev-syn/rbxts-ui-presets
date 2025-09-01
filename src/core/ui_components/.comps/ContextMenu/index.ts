@@ -6,7 +6,7 @@ import { ContextItem, ContextItemBtnType } from '../../../presets/.pres/ContextI
 import { Configurable, SchemaToType } from '@rbxts/syn-utils';
 import { UIComponent, UIComponentAttributes, UIComponentDefaultAttributes } from '../..';
 import { ComponentTag } from '../../ComponentTag';
-import { ContentProvider, RunService, TextService } from '@rbxts/services';
+import { ContentProvider, TextService } from '@rbxts/services';
 import Object from '@rbxts/object-utils';
 import { Component } from '@flamework/components';
 
@@ -51,8 +51,8 @@ interface MenuStyle {
 	font: Font
 }
 
-/** The static shared options of the {@link ContextMenu} */
-interface SharedMenuOptions {
+/** The static global options of the {@link ContextMenu} */
+interface GlobalMenuOptions {
 	/** Whether only one or many context menu objects can be shown at a time. */
 	onlySingleContext: boolean;
 	/** The default style for all {@link ContextMenu} objects. */
@@ -107,7 +107,7 @@ class ContextMenu extends UIComponent<
 	/** The {@link ScreenGui} Instance that will hold all the ContextMenu objects. */
 	static ContextMenuUI: ScreenGui = new Instance("ScreenGui");
 
-	static SharedOptions: SharedMenuOptions = {
+	static GlobalOptions: GlobalMenuOptions = {
 		onlySingleContext: true,
 		style: {
 			font: new Font("rbxasset://fonts/families/Roboto.json")
@@ -118,7 +118,7 @@ class ContextMenu extends UIComponent<
 	private static _LastActiveMenu?: ContextMenu = undefined;
 
 	static {
-		ContentProvider.PreloadAsync([ContextMenu.SharedOptions.style.font as unknown as Instance])
+		ContentProvider.PreloadAsync([ContextMenu.GlobalOptions.style.font as unknown as Instance])
 	}
 // #endregion
 
@@ -177,7 +177,7 @@ class ContextMenu extends UIComponent<
 
 		// When the trigger element is right clicked draw and display the context menu
 		this.instance.MouseButton2Click.Connect(() => {
-			if (ContextMenu.OnlySingleContext && ContextMenu._LastActiveMenu && ContextMenu._LastActiveMenu !== this)
+			if (ContextMenu.GlobalOptions.onlySingleContext && ContextMenu._LastActiveMenu && ContextMenu._LastActiveMenu !== this)
 				
 				ContextMenu._LastActiveMenu.configuration.menuBG.Parent = undefined;
 			if (!this.configuration.menuBG.Parent) {
@@ -314,34 +314,20 @@ class ContextMenu extends UIComponent<
 	 * a minimum size fit and will return the minimum fit and assign that to all {@link ContextItem}
 	 */
 	GetCommonTextSize(absX: number, absY: number): number {
-		let commonSize: number = 80;
-
-		const tl: TextLabel;
-		tl.TextSize = commonSize;
-		tl.Size = new UDim2(0,absX,0,absY);
-
 		for (const item of this.GetActiveContexts()) {
 			if (item.getButtonType() !== ContextItemBtnType.TextBtn) continue;
 
-			const font = new Font(Enum.Font.Gotham.Name);
+			const font = ContextMenu.GlobalOptions.style.font;
 
 			const textParams = new Instance("GetTextBoundsParams");
 			textParams.Text = item.attributes.up_Content;
-			textParams.Font = 
-			TextService.GetTextBoundsAsync()
+			textParams.Font = font;
+			textParams.Size
 
-			tl.Text = item.Name;
+			Promise.promisify(() => TextService.GetTextBoundsAsync(textParams));
 
-			while(!tl.TextFits) {
-					if (commonSize === 2) break;
-
-					tl.TextSize = commonSize -= 2;
-					RunService.Heartbeat.Wait();
-			}
-			commonSize = tl.TextSize;
 		}
 
-		return commonSize - commonSize / 4;
 	}
 
 	/**
