@@ -30,8 +30,9 @@ function createContextMenu(): Preset_ContextMenu {
  */
 enum TextSizingMode {
 	/**
-	 * This sizing mode goes through all the ContextItem text properties and
-	 * finds the lowest text size where all items would fit.
+	 * This sizing mode goes through all the ContextItem text sizes and
+	 * finds the highest text size where all items would fit.
+	 * 
 	 * This mode has a built-in fixed padding on those text sizes.
 	 */
 	MinimumCommon = "MinimumCommon",
@@ -181,7 +182,7 @@ class ContextMenu extends UIComponent<
 				
 				ContextMenu._LastActiveMenu.configuration.menuBG.Parent = undefined;
 			if (!this.configuration.menuBG.Parent) {
-				this.Draw();
+				this.draw();
 				this.configuration.menuBG.Parent = ContextMenu.ContextMenuUI;
 			} else {
 				this.configuration.menuBG.Parent = undefined;
@@ -191,21 +192,21 @@ class ContextMenu extends UIComponent<
 		
 		// When the trigger element's position is changed, redraw the context menu.
 		this.maid.GiveTask(
-			this.instance.GetPropertyChangedSignal("Position").Connect(() => this.Draw())
+			this.instance.GetPropertyChangedSignal("Position").Connect(() => this.draw())
 		);
 	}
 
 	/**
 	 * Draws the sizing and positioning for both the ContextMenu and ContextItems that are active.
 	 */
-	Draw(): void {
+	draw(): void {
 
 		if (!this._itemTextSize) this.updateTextSize();
 
 		// Get the updated screen size
 		this._viewSize = ContextMenu.ContextMenuUI.AbsoluteSize;
 
-		const activeContexts: ContextItem[] = this.GetActiveContexts();
+		const activeContexts: ContextItem[] = this.getActiveContexts();
 		const contextSize: number = activeContexts.size();
 
 		// If no context; don't draw anything
@@ -313,8 +314,10 @@ class ContextMenu extends UIComponent<
 	 * Goes through each active {@link ContextItem} and uses it's text to determine
 	 * a minimum size fit and will return the minimum fit and assign that to all {@link ContextItem}
 	 */
-	GetCommonTextSize(absX: number, absY: number): number {
-		for (const item of this.GetActiveContexts()) {
+	async getCommonTextSize(): Promise<Vector2[]> {
+
+		const commonTextBounds: Vector2[] = [];
+		for (const item of this.getActiveContexts()) {
 			if (item.getButtonType() !== ContextItemBtnType.TextBtn) continue;
 
 			const font = ContextMenu.GlobalOptions.style.font;
@@ -322,9 +325,19 @@ class ContextMenu extends UIComponent<
 			const textParams = new Instance("GetTextBoundsParams");
 			textParams.Text = item.attributes.up_Content;
 			textParams.Font = font;
-			textParams.Size
+			textParams.Width = item.instance.AbsoluteSize.X;
 
-			Promise.promisify(() => TextService.GetTextBoundsAsync(textParams));
+			try {
+				const textBounds = TextService.GetTextBoundsAsync(textParams);
+			} catch(err: unknown) {
+				return new Vector2(0,0);
+			}
+
+			const textBounds =
+			Promise.try(() => TextService.GetTextBoundsAsync(textParams))
+			.then(() => {
+
+			})
 
 		}
 
@@ -334,13 +347,13 @@ class ContextMenu extends UIComponent<
 	 * Gets all the active ContextItems belonging to this ContextMenu.
 	 * @returns - An array of ContextItem.
 	 */
-	GetActiveContexts(): ContextItem[] { return this._contexts.filter(c => c.attributes.up_Active); }
+	getActiveContexts(): ContextItem[] { return this._contexts.filter(c => c.attributes.up_Active); }
 
 	/**
 	 * Adds the given {@link ContextItem} to this {@link ContextMenu}.
 	 * @param item - The {@link ContextItem} object to add
 	 */
-	AddContext(item: ContextItem) {
+	addContext(item: ContextItem) {
 		this._contexts.push(item);
 		this.updateTextSize();
 	}
@@ -349,7 +362,7 @@ class ContextMenu extends UIComponent<
 	 * Removes the given {@link ContextItem} from this ContextMenu.
 	 * @param item - The {@link ContextItem} object to remove
 	 */
-	RemoveContext(item: ContextItem) {
+	removeContext(item: ContextItem) {
 		const index: number = this._contexts.indexOf(item);
 		if (index !== -1) this._contexts.remove(index);
 		this.updateTextSize();
@@ -358,7 +371,7 @@ class ContextMenu extends UIComponent<
 	/**
 	 * Clears all ContextItems from this {@link ContextMenu} internally destroying each ContextItem.
 	 */
-	Clear() {
+	clear() {
 		this._contexts.forEach(c => c.instance.Destroy());
 		this._contexts.clear();
 	}
@@ -380,7 +393,7 @@ class ContextMenu extends UIComponent<
 			// The minimum absolute size of each context item on the x axis
 			const itemAbsSizeX: number = math.ceil(itemSize.X * owner.AbsoluteSize.X);
 
-			this._itemTextSize = this.GetCommonTextSize(itemAbsSizeX,itemAbsSizeY);
+			this._itemTextSize = this.getCommonTextSize(itemAbsSizeX,itemAbsSizeY);
 		}
 		else if (this.options.textSizingMode === TextSizingMode.Scaled)
 			this._itemTextSize = this.attributes.up_TextSizeScalar * owner.TextSize;
